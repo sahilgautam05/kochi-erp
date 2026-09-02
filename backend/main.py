@@ -59,12 +59,12 @@ app.include_router(fleet_ml.router)
 app.include_router(auth_sync.router)
 
 # Custom Route to serve the Landing Page at root /
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def root():
     index_file = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return {"message": "Kochi Metro ERP Backend running"}
+    return HTMLResponse("<h2>Kochi Metro ERP Backend is Running</h2>")
 
 # Serve all frontend static files (.html, .css, .js, .jpg, etc.) directly from FRONTEND_DIR
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
