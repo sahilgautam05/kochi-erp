@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Management - Kochi Metro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <meta name="theme-color" content="#2563eb" />
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --primary-hover: #1d4ed8;
+        --surface-color: #ffffff;
+        --bg-color: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --radius-lg: 12px;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        margin: 0;
+      }
+      
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+    
+    .header { background: #1e3a8a; color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow-md); }
+    .header-container { display: flex; align-items: center; padding: 1rem 2rem; }
+    .header-nav { display: flex; align-items: center; gap: 0.5rem; }
+    .logo { margin-right: 1.5rem; }
+    .logo img { height: 40px; }
+    .nav-item, .dropdown-toggle, .notification-btn, .profile-btn {
+        display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #fff;
+        text-decoration: none; border-radius: 6px; transition: background-color 0.2s;
+        background: transparent; border: none; font-family: inherit; font-size: 1rem; cursor: pointer;
+    }
+    .nav-item.active, .nav-item:hover, .dropdown-toggle:hover, .notification-btn:hover, .profile-btn:hover { background-color: rgba(255, 255, 255, 0.15); }
+    .nav-dropdown, .notification-container, .profile-container { position: relative; }
+    .nav-dropdown-content {
+        display: none; position: absolute; top: 120%; left: 0; background-color: var(--surface-color);
+        border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 0.5rem; z-index: 1001;
+        min-width: 200px; border: 1px solid var(--border-color);
+    }
+    .nav-dropdown.active .nav-dropdown-content { display: block; }
+    .nav-dropdown-item {
+        color: var(--text-primary); padding: 0.75rem 1rem; display: flex; align-items: center;
+        gap: 0.75rem; text-decoration: none; border-radius: 6px;
+    }
+    .nav-dropdown-item:hover { background-color: var(--bg-color); }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+    
+    .notification-badge {
+        position: absolute; top: 5px; right: 10px; background-color: #ef4444; color: white;
+        width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; font-weight: bold;
+        display: flex; align-items: center; justify-content: center; border: 2px solid #1e3a8a;
+    }
+    .profile-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: -0.25rem; object-fit: cover; }
+    .notification-dropdown, .profile-dropdown {
+        display: none; position: absolute; top: 120%; right: 0; background-color: var(--surface-color);
+        color: var(--text-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+        width: 320px; z-index: 1001; border: 1px solid var(--border-color);
+    }
+    .notification-container.active .notification-dropdown, .profile-container.active .profile-dropdown { display: block; }
+    .notification-header, .profile-info { padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .notification-list { max-height: 300px; overflow-y: auto; }
+    .notification-item { display: flex; gap: 1rem; padding: 1rem; }
+    .notification-item:hover { background-color: var(--bg-color); }
+    .notification-title { font-weight: 600; margin-bottom: 0.25rem; }
+    .notification-text, .profile-details p { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+    .notification-time { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+    .profile-info { gap: 1rem; }
+    .profile-avatar-large { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .profile-details h4 { margin: 0; }
+    .profile-menu button {
+        display: flex; width: 100%; text-align: left; padding: 0.75rem 1rem; gap: 0.75rem; 
+        color: var(--text-primary); border-radius: 0; font-size: 1rem;
+    }
+    .profile-menu button:hover { background-color: var(--bg-color); }
+    .profile-menu-divider { height: 1px; background-color: var(--border-color); margin: 0.5rem 0; }
+    .main-content { padding: 2rem 0; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 2.25rem; margin: 0; }
+    .page-header p { color: var(--text-secondary); margin-top: 0.25rem; }
+    /* ✅ END: Standard CSS */
+
+      /* ✅ END: CSS for Dropdowns */
+
+      /* Main Content */
+      .main-content {
+        padding: 2rem 0;
+      }
+      .page-header {
+        margin-bottom: 2rem;
+      }
+      .page-header h1 {
+        font-size: 2.25rem;
+        margin: 0;
+      }
+      .page-header p {
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+      .kpi-card {
+        background-color: var(--surface-color);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-left: 5px solid var(--primary-color);
+      }
+      .kpi-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        background-color: #e0e7ff;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .kpi-info .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+      }
+      .kpi-info .label {
+        color: var(--text-secondary);
+        margin: 0;
+      }
+
+      .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+      }
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+      .action-card {
+        background-color: var(--surface-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        color: var(--primary-color);
+      }
+      .action-card i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+      }
+      .action-card h3 {
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem 0;
+      }
+      .action-card p {
+        color: var(--text-secondary);
+        margin: 0;
+      }
+
+      .status-list {
+        list-style: none;
+        padding: 0;
+        background-color: var(--surface-color);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+      }
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .status-item:last-child {
+        border-bottom: none;
+      }
+      .status-item .label {
+        font-weight: 500;
+      }
+      .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      .status-badge.operational {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+      .status-badge.degraded {
+        background-color: #fef9c3;
+        color: #854d0e;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="container header-container">
+        <nav class="header-nav">
+          <div class="logo">
+            <img src="logo.jpg" alt="Kochi Metro Logo" />
+          </div>
+          <a href="dashboard.html" class="nav-item"
+            ><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a
+          >
+          <div class="nav-dropdown">
+            <button class="nav-item dropdown-toggle">
+              <i class="fas fa-cogs"></i><span>Operations</span
+              ><i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+            <div class="nav-dropdown-content">
+              <a href="train-operations.html" class="nav-dropdown-item"
+                ><i class="fas fa-train"></i><span>Train Operations</span></a
+              >
+              <a href="verify-operations.html" class="nav-dropdown-item"
+                ><i class="fas fa-check-circle"></i
+                ><span>Verify Operations</span></a
+              >
+            </div>
+          </div>
+          <a href="management.html" class="nav-item active"
+            ><i class="fas fa-users-cog"></i><span>Management</span></a
+          >
+          <a href="staff-management.html" class="nav-item"
+            ><i class="fas fa-users"></i><span>Staff</span></a
+          >
+          <a href="schedule-management.html" class="nav-item"
+            ><i class="fas fa-calendar-alt"></i><span>Schedule</span></a
+          >
+          <a href="live-map.html" class="nav-item"
+            ><i class="fas fa-map-marked-alt"></i><span>Live Map</span></a
+          >
+          <a href="reports1.html" class="nav-item"
+            ><i class="fas fa-chart-bar"></i><span>Reports</span></a
+          >
+          <a href="multitrack.html" class="nav-item"
+            ><i class="fas fa-users"></i><span>Multitrack</span></a
+          >
+          <a href="finance-department.html" class="nav-item"
+            ><i class="fas fa-money-bill-wave"></i><span>Finance</span></a
+          >
+        </nav>
+       
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div>
+            <h1>System Management Overview</h1>
+            <p>High-level statistics and quick access to management modules.</p>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-users"></i></div>
+            <div class="kpi-info">
+              <h2 class="value" id="kpi-staff">...</h2>
+              <p class="label">Total Staff</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-train"></i></div>
+            <div class="kpi-info">
+              <h2 class="value" id="kpi-trains">...</h2>
+              <p class="label">Trains in Service</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-info">
+              <h2 class="value" id="kpi-performance">...</h2>
+              <p class="label">On-Time Performance</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-tools"></i></div>
+            <div class="kpi-info">
+              <h2 class="value" id="kpi-maintenance">...</h2>
+              <p class="label">Open Maintenance Tickets</p>
+            </div>
+          </div>
+        </div>
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="actions-grid">
+          <a href="staff-management.html" class="action-card"
+            ><i class="fas fa-users"></i>
+            <h3>Manage Staff</h3>
+            <p>View, add, or edit staff members and their assignments.</p></a
+          >
+          <a href="schedule-management.html" class="action-card"
+            ><i class="fas fa-calendar-alt"></i>
+            <h3>Manage Schedules</h3>
+            <p>Update train timetables and operational schedules.</p></a
+          >
+          <a href="live-map.html" class="action-card"
+            ><i class="fas fa-map-marked-alt"></i>
+            <h3>View Live Map</h3>
+            <p>
+              See real-time locations of all active trains on the network.
+            </p></a
+          >
+          <a href="reports1.html" class="action-card"
+            ><i class="fas fa-chart-bar"></i>
+            <h3>Generate Reports</h3>
+            <p>Access performance analytics and system reports.</p></a
+          >
+        </div>
+        <h2 class="section-title">System Status</h2>
+        <ul class="status-list" id="system-status-list"></ul>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // ✅ START: Updated Dropdown Logic for All Dropdowns
+        const dropdownTriggers = [
+          { selector: ".dropdown-toggle", container: ".nav-dropdown" },
+          {
+            selector: "#notification-btn",
+            container: ".notification-container",
+          },
+          { selector: "#profile-btn", container: ".profile-container" },
+        ];
+
+        dropdownTriggers.forEach((triggerInfo) => {
+          document.querySelectorAll(triggerInfo.selector).forEach((trigger) => {
+            trigger.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const container = trigger.closest(triggerInfo.container);
+              const isActive = container.classList.contains("active");
+
+              // Close all dropdowns first
+              document
+                .querySelectorAll(
+                  ".nav-dropdown, .notification-container, .profile-container"
+                )
+                .forEach((d) => d.classList.remove("active"));
+
+              // If the clicked one wasn't already active, open it
+              if (!isActive) {
+                container.classList.add("active");
+              }
+            });
+          });
+        });
+
+        // Global click to close all dropdowns
+        window.addEventListener("click", (e) => {
+          if (
+            !e.target.closest(
+              ".nav-dropdown, .notification-container, .profile-container"
+            )
+          ) {
+            document
+              .querySelectorAll(
+                ".nav-dropdown, .notification-container, .profile-container"
+              )
+              .forEach((d) => d.classList.remove("active"));
+          }
+        });
+        // ✅ END: Updated Dropdown Logic
+
+        // --- Dashboard Data Population Logic ---
+        function populateDashboard() {
+          document.getElementById("kpi-staff").textContent =
+            Math.floor(Math.random() * 50) + 250;
+          document.getElementById("kpi-trains").textContent =
+            Math.floor(Math.random() * 5) + 20;
+          document.getElementById("kpi-performance").textContent =
+            (Math.random() * (99.8 - 97.5) + 97.5).toFixed(1) + "%";
+          document.getElementById("kpi-maintenance").textContent =
+            Math.floor(Math.random() * 4) + 1;
+
+          const systems = [
+            {
+              name: "Signaling System",
+              status: "Operational",
+              class: "operational",
+            },
+            { name: "Power Grid", status: "Operational", class: "operational" },
+            {
+              name: "Ticketing & Gates",
+              status: "Operational",
+              class: "operational",
+            },
+            {
+              name: "Communications",
+              status: "Operational",
+              class: "operational",
+            },
+          ];
+
+          const statusList = document.getElementById("system-status-list");
+          statusList.innerHTML = "";
+
+          systems.forEach((system) => {
+            const item = document.createElement("li");
+            item.className = "status-item";
+            item.innerHTML = `<span class="label">${system.name}</span><span class="status-badge ${system.class}">${system.status}</span>`;
+            statusList.appendChild(item);
+          });
+        }
+        populateDashboard();
+      });
+    </script>
+  </body>
+</html>

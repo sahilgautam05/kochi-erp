@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kochi Metro Rail Limited</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* ===== Global Styles ===== */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        line-height: 1.6;
+        color: #003366;
+        scroll-behavior: smooth;
+        background: #f2f5f7;
+      }
+
+      /* ===== Navigation ===== */
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        background: #003366;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      }
+      nav .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      nav .logo img {
+        height: 50px;
+      }
+
+      /* ===== Header & Hero Section ===== */
+      header {
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+      }
+      header h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+      }
+      header p {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+      header #heroQuote {
+        font-style: italic;
+        margin-bottom: 20px;
+        font-size: 2.8rem;
+        color: #003366;
+      }
+      .btn-group button {
+        background: #0077b6;
+        color: white;
+        border: none;
+        padding: 15px 35px;
+        margin: 10px;
+        font-weight: bold;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .btn-group button:hover {
+        background: #3399ff;
+      }
+      #hero {
+        background-image: url("front-img.jpg");
+        background-size: cover;
+        background-position: center;
+      }
+      .content {
+        background: rgba(255, 255, 255, 0.4);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(8px);
+        max-width: 70%;
+        height: auto;
+      }
+
+      /* ===== Content Sections & Cards ===== */
+      #why {
+        padding: 60px 20px;
+        text-align: center;
+        background: #e6f2ff;
+        color: #003366;
+      }
+      #why h2 {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+      }
+      #why p {
+        font-size: 1.1rem;
+        max-width: 900px;
+        margin: 0 auto 40px auto;
+      }
+      .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 30px;
+      }
+      .card {
+        background: #fff;
+        color: #003366;
+        width: 250px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+      }
+      .card h3 {
+        margin: 12px;
+        font-size: 1.2rem;
+      }
+      .card p {
+        margin: 0 12px 12px 12px;
+        font-size: 0.95rem;
+      }
+      .card:hover {
+        transform: translateY(-5px) scale(1.03);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      /* ===== Footer ===== */
+      footer {
+        background: #003366;
+        color: white;
+        text-align: center;
+        padding: 20px 10px;
+        margin-top: 20px;
+      }
+      footer a {
+        color: #99ccff;
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* ===== Modal & Forms ===== */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+      .modal-content {
+        background: rgba(255, 255, 255, 0.95);
+        color: #003366;
+        width: 400px;
+        padding: 25px;
+        border-radius: 20px;
+        position: relative;
+        animation: fadeIn 0.4s ease-in-out;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+      .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #003366;
+      }
+      .tabs {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #cce6ff;
+      }
+      .tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .tab.active {
+        border-bottom: 3px solid #0077b6;
+        color: #0077b6;
+      }
+      .form {
+        display: none;
+        text-align: left;
+      }
+      .form.active {
+        display: block;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #cce6ff;
+        border-radius: 8px;
+        outline: none;
+      }
+      .submit-btn {
+        background: #0077b6;
+        color: white;
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .submit-btn:hover {
+        background: #3399ff;
+      }
+      .submit-btn:disabled {
+        background: #5a8fb3;
+        cursor: not-allowed;
+      }
+      .demo-btn {
+        background: #f0f0f0;
+        color: #0077b6;
+        border: 1px solid #cce6ff;
+        margin-top: 8px;
+      }
+      .demo-btn:hover {
+        background: #e6f2ff;
+      }
+
+      /* ===== Animations & Media Queries ===== */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @media (max-width: 768px) {
+        nav ul {
+          flex-direction: column;
+        }
+        #why .photos {
+          flex-direction: column;
+          align-items: center;
+        }
+        header h1 {
+          font-size: 2rem;
+        }
+        .modal-content {
+          width: 90%;
+        }
+      }
+      .logo img {
+        /* Set the size */
+        width: 80px;
+        height: 40px;
+
+        /* Adjust for more or less rounded corners */
+        border-radius: 8px;
+
+        /* Add a simple border */
+        border: 2px solid #ddd;
+        float: left;
+      }
+      #hero{
+        margin-top: 5px;
+        background-image: url(front-img.jpg);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: brightness(0.7);
+      }
+      .logo1 img {
+        /* Set the size */
+        width: 170px;
+        height: 50px;
+        /* Add a simple border */
+        border: 2px solid #ddd;
+        float: left;
+      }
+      .logo-text {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-left: 10px;
+        color: white;
+        float: left;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="logo1">
+        <img src="logo1.jpg" alt="Logo" />
+        <h1 class="logo-text">Kochi Metro Rail Limited</h1>
+      </div>
+      
+    </nav>
+
+    <header id="hero">
+      <div class="content">
+        <p id="heroQuote"></p>
+        <h3>Connecting the city with speed, comfort and style</h3>
+        <div class="btn-group">
+          <button onclick="openModal('customer')">
+            <i class="fas fa-user"></i> Customer Login
+          </button>
+          <button onclick="openModal('admin')">
+            <i class="fas fa-user-shield"></i> Admin Login
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section id="why">
+      <h2>Why Travel by Kochi Metro?</h2>
+      <p>
+        Kochi Metro provides a fast, safe, and eco-friendly way to travel across
+        the city. It reduces traffic congestion, saves time, and connects key
+        business and tourist areas efficiently.
+      </p>
+      <div class="cards-container">
+        <div class="card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1yQBIHBT3v_mN2GFh1-RPQEu-YNiNcGO8iw&s"
+            alt="Fast Travel"
+          />
+          <h3>Fast Travel</h3>
+          <p>
+            Reach your destination quickly and efficiently, avoiding city
+            traffic jams.
+          </p>
+        </div>
+        <div class="card">
+          <img
+            src="safe-reliable.jpg"
+            alt="Safe & Reliable"
+            onerror="this.src='front-img.jpg'"
+          />
+          <h3>Safe & Reliable</h3>
+          <p>
+            Travel in a secure environment with state-of-the-art surveillance
+            and facilities.
+          </p>
+        </div>
+        <div class="card">
+          <img src="ecofriendly-img.jpg" alt="Eco-Friendly" />
+          <h3>Eco-Friendly</h3>
+          <p>
+            Reduce your carbon footprint by choosing a sustainable mode of
+            transportation.
+          </p>
+        </div>
+        <div class="card">
+          <img
+            src="https://akm-img-a-in.tosshub.com/indiatoday/images/story/201706/kochi-metro-647_061717040422.jpg"
+            alt="Convenient"
+          />
+          <h3>Convenient</h3>
+          <p>
+            Well-connected stations and regular schedules make commuting
+            hassle-free.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer id="contact">
+      <p>&copy; 2025 Kochi Metro Rail Limited</p>
+      <p>
+        Follow us on <a href="#"><i class="fab fa-facebook"></i> Facebook</a> |
+        <a href="#"><i class="fab fa-twitter"></i> Twitter</a> |
+        <a href="#"><i class="fab fa-instagram"></i> Instagram</a>
+      </p>
+      <p>Email: info@kochimetro.org | Phone: +91 484 1234567</p>
+    </footer>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Login</h2>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('login')">Login</div>
+          <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+        </div>
+
+        <form id="loginForm" class="form active">
+          <input
+            type="text"
+            id="loginUsername"
+            placeholder="Username"
+            required
+          />
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            required
+          />
+          <button type="submit" class="submit-btn">Login</button>
+          <button type="button" id="demoLoginBtn" class="submit-btn demo-btn">
+            Demo Login
+          </button>
+        </form>
+
+        <form id="signupForm" class="form">
+          <input
+            type="text"
+            id="signupUsername"
+            placeholder="Username"
+            required
+          />
+          <input
+            type="password"
+            id="signupPassword"
+            placeholder="Password"
+            required
+          />
+          <select id="signupRole">
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button type="submit" class="submit-btn">Sign Up</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        /* ==== Quotes Rotation ==== */
+        const quotes = [
+          "The Metro is the city’s pulse — fast, reliable, and clean.",
+          "Ride the Kochi Metro and beat the city traffic.",
+          "Comfort and speed in every ride — that’s Kochi Metro.",
+          "Travel smart. Travel green. Choose Kochi Metro.",
+          "Connecting communities, powering progress — Kochi Metro.",
+        ];
+        let quoteIndex = 0;
+        const heroQuoteElement = document.getElementById("heroQuote");
+
+        function changeQuote() {
+          if (heroQuoteElement) {
+            heroQuoteElement.textContent = quotes[quoteIndex];
+            quoteIndex = (quoteIndex + 1) % quotes.length;
+          }
+        }
+        changeQuote();
+        setInterval(changeQuote, 8000);
+      });
+
+      /* ==== Modal Controls (Global Scope) ==== */
+      let currentLoginType = "customer";
+
+      function openModal(type) {
+        currentLoginType = type;
+        document.getElementById("loginModal").style.display = "flex";
+        document.getElementById("modalTitle").textContent =
+          type === "admin" ? "Admin Login" : "Customer Login";
+
+        // Reset login button state
+        const loginButton = document
+          .getElementById("loginForm")
+          .querySelector('button[type="submit"]');
+        loginButton.disabled = false;
+        loginButton.innerHTML = "Login";
+
+        switchTab("login");
+      }
+
+      function closeModal() {
+        document.getElementById("loginModal").style.display = "none";
+      }
+
+      function switchTab(tab) {
+        const loginForm = document.getElementById("loginForm");
+        const signupForm = document.getElementById("signupForm");
+        const tabs = document.querySelectorAll(".tab");
+        tabs.forEach((t) => t.classList.remove("active"));
+
+        if (tab === "login") {
+          loginForm.classList.add("active");
+          signupForm.classList.remove("active");
+          tabs[0].classList.add("active");
+        } else {
+          loginForm.classList.remove("active");
+          signupForm.classList.add("active");
+          tabs[1].classList.add("active");
+        }
+      }
+
+      /* ==== Backend Integration Simulation ==== */
+      // ✅ Signup
+      document.getElementById("signupForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = document.getElementById("signupUsername").value;
+        const role = document.getElementById("signupRole").value;
+        alert(
+          `Simulating sign up for user: "${username}" with role: "${role}".`
+        );
+        switchTab("login");
+      });
+
+      // ✅ Login
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const loginButton = e.target.querySelector('button[type="submit"]');
+
+        // Show loading state
+        loginButton.disabled = true;
+        loginButton.innerHTML = `<div class="spinner"></div><span>Logging In...</span>`;
+
+        // Simulate network delay then redirect
+        setTimeout(() => {
+          if (currentLoginType === "admin") {
+            window.location.href = "dashboard.html"; // <-- UPDATED FILENAME
+          } else {
+            window.location.href = "userpage.html"; // <-- UPDATED FILENAME
+          }
+        }, 1000); // 1 second delay
+      });
+
+      // ===== Demo Login Logic =====
+      document.getElementById("demoLoginBtn").addEventListener("click", () => {
+        const usernameInput = document.getElementById("loginUsername");
+        const passwordInput = document.getElementById("loginPassword");
+        const loginSubmitButton = document
+          .getElementById("loginForm")
+          .querySelector('button[type="submit"]');
+
+        if (currentLoginType === "admin") {
+          usernameInput.value = "admin";
+          passwordInput.value = "admin123";
+        } else {
+          usernameInput.value = "customer";
+          passwordInput.value = "customer123";
+        }
+
+        if (loginSubmitButton) {
+          loginSubmitButton.click();
+        } else {
+          console.error("Login submit button could not be found!");
+        }
+      });
+    </script>
+  </body>
+</html>

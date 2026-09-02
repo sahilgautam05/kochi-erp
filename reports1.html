@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports & Analytics - Kochi Metro Rail Management System</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="theme-color" content="#2563eb" />
+</head>
+<body>
+    <header class="header">
+        <div class="container header-container">
+            <nav class="header-nav">
+                <div class="logo"><img src="logo.jpg" alt="logo"></div>
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <div class="nav-dropdown">
+                    <button class="nav-item dropdown-toggle" aria-expanded="false">
+                        <i class="fas fa-cogs"></i>
+                        <span>Operations</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="nav-dropdown-content">
+                        <a href="train-operations.html" class="nav-dropdown-item">
+                            <i class="fas fa-train"></i>
+                            <span>Train Operations</span>
+                        </a>
+                        <a href="verify-operations.html" class="nav-dropdown-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Verify Operations</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="/Frontend/final_sih2/kmrl_project/frontend/index.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Management</span>
+                </a>
+                <a href="staff-management.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Staff</span>
+                </a>
+                <a href="schedule-management.html" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Schedule</span>
+                </a>
+                <a href="live-map.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Live Map</span>
+                </a>
+                <a href="reports1.html" class="nav-item active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="multitrack.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Multitrack</span>
+                </a>
+                <a href="finance-department.html" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Finance</span>
+          </a>
+            </nav>
+            
+        </div>
+        <nav class="mobile-nav" id="mobile-nav">
+            </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <div>
+                    <h1>Reports & Analytics</h1>
+                    <p>Comprehensive reports and performance analytics</p>
+                </div>
+            </div>
+
+            <div class="reports-grid"> <div class="report-card">
+                    <h3>Eligible vs Blocked Trains</h3>
+                    <p>Overview of train eligibility status from rules-based model.</p>
+                    <canvas id="statusChart"></canvas>
+                    <div class="report-actions">
+                        <button onclick="loadStatusChart()">Refresh</button>
+                        <button onclick="downloadChart('statusChart', 'status-report.png')">Download PNG</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>What-If Analysis: Before vs After</h3>
+                    <p>Comparison of optimization scores before and after applying What-If analysis.</p>
+                    <div class="filters">
+                        <label>Trains: <input type="number" id="whatifK" min="1" value="10"></label>
+                        <label>Branding: <input type="number" id="brandingWeight" value="0.5" step="0.1"></label>
+                        <label>Stabling: <input type="number" id="stablingWeight" value="0.3" step="0.1"></label>
+                    </div>
+                    <canvas id="whatifChart"></canvas>
+                    <div class="report-actions">
+                        <button onclick="loadWhatIfChart()">Refresh</button>
+                        <button onclick="downloadChart('whatifChart', 'what-if-report.png')">Download PNG</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Alerts Distribution</h3>
+                    <p>Breakdown of different types of alerts from rule-based model.</p>
+                    <canvas id="alertsChart"></canvas>
+                    <div class="report-actions">
+                        <button onclick="loadAlertsChart()">Refresh</button>
+                        <button onclick="downloadChart('alertsChart', 'alerts-report.png')">Download PNG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="multipage-script.js"></script>
+
+    <script>
+        // Use a global scope for chart instances so they can be destroyed before redraw
+        let statusChartInstance, whatIfChartInstance, alertsChartInstance;
+
+        // --- CHART 1: ELIGIBLE VS BLOCKED ---
+        function loadStatusChart() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            if (statusChartInstance) {
+                statusChartInstance.destroy(); // Destroy old chart before creating new one
+            }
+            statusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Eligible', 'Blocked'],
+                    datasets: [{
+                        label: 'Train Status',
+                        data: [Math.floor(Math.random() * 100) + 50, Math.floor(Math.random() * 20) + 5], // Random data on refresh
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Train Eligibility Status' }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 2: WHAT-IF ANALYSIS ---
+        function loadWhatIfChart() {
+            const ctx = document.getElementById('whatifChart').getContext('2d');
+            if (whatIfChartInstance) {
+                whatIfChartInstance.destroy();
+            }
+            // Get values from inputs to simulate interactivity
+            const kValue = document.getElementById('whatifK').value || 10;
+            const brandingWeight = document.getElementById('brandingWeight').value || 0.5;
+            const stablingWeight = document.getElementById('stablingWeight').value || 0.3;
+
+            const beforeScore = (kValue * brandingWeight * 0.8).toFixed(2);
+            const afterScore = (kValue * (brandingWeight * 1.2 + stablingWeight * 0.9)).toFixed(2);
+
+            whatIfChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Optimization Score'],
+                    datasets: [{
+                        label: 'Before Analysis',
+                        data: [beforeScore],
+                        backgroundColor: '#f59e0b',
+                    }, {
+                        label: 'After Analysis',
+                        data: [afterScore],
+                        backgroundColor: '#3b82f6',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Score' } } },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Optimization Score Comparison' }
+                    }
+                }
+            });
+        }
+
+        // --- CHART 3: ALERTS DISTRIBUTION ---
+        function loadAlertsChart() {
+            const ctx = document.getElementById('alertsChart').getContext('2d');
+            if (alertsChartInstance) {
+                alertsChartInstance.destroy();
+            }
+            alertsChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Critical', 'Warning', 'Informational'],
+                    datasets: [{
+                        label: 'Alert Types',
+                        data: [Math.floor(Math.random() * 10), Math.floor(Math.random() * 30), Math.floor(Math.random() * 50)],
+                        backgroundColor: ['#dc2626', '#f97316', '#2563eb'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Distribution of Alert Types' }
+                    }
+                }
+            });
+        }
+
+        // --- GENERIC DOWNLOAD FUNCTION ---
+        function downloadChart(chartId, filename) {
+            const canvas = document.getElementById(chartId);
+            const imageURL = canvas.toDataURL('image/png', 1.0); // Get image as a base64 URL
+            
+            const link = document.createElement('a');
+            link.href = imageURL;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+        // --- INITIAL LOAD ---
+        // Wait for the DOM to be fully loaded before trying to create charts
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStatusChart();
+            loadWhatIfChart();
+            loadAlertsChart();
+        });
+    </script>
+</body>
+</html>

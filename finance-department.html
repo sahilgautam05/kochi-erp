@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Department Portal - Kochi Metro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    /* ✅ START: Standard Navbar & Theme CSS */
+    :root {
+        --primary-color: #2563eb;
+        --primary-hover: #1d4ed8;
+        --surface-color: #ffffff;
+        --bg-color: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --radius-lg: 12px;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        margin: 0;
+    }
+    .container { 
+        max-width: 1400px; 
+        margin: 0 auto; 
+        padding: 0 2rem; 
+    }
+    .header { 
+        background: #1e3a8a; 
+        color: #fff; 
+        position: sticky; 
+        top: 0; 
+        z-index: 1000; 
+        box-shadow: var(--shadow-md); 
+    }
+    .header-container { 
+        display: flex; 
+        align-items: center; 
+        padding: 1rem 2rem; 
+    }
+    .header-nav { 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
+    }
+    .logo { 
+        margin-right: 1.5rem; 
+    }
+    .logo img { 
+        height: 40px; 
+    }
+    .nav-item, .dropdown-toggle, .notification-btn, .profile-btn {
+        display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #fff;
+        text-decoration: none; border-radius: 6px; transition: background-color 0.2s;
+        background: transparent; border: none; font-family: inherit; font-size: 1rem; cursor: pointer;
+    }
+    .nav-item.active, .nav-item:hover, .dropdown-toggle:hover, .notification-btn:hover, .profile-btn:hover { 
+        background-color: rgba(255, 255, 255, 0.15); 
+    }
+    .nav-dropdown, .notification-container, .profile-container { 
+        position: relative; 
+    }
+    .nav-dropdown-content {
+        display: none; position: absolute; top: 120%; left: 0; background-color: var(--surface-color);
+        border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 0.5rem; z-index: 1001;
+        min-width: 200px; border: 1px solid var(--border-color);
+    }
+    .nav-dropdown.active .nav-dropdown-content { 
+        display: block; 
+    }
+    .nav-dropdown-item {
+        color: var(--text-primary); padding: 0.75rem 1rem; display: flex; align-items: center;
+        gap: 0.75rem; text-decoration: none; border-radius: 6px;
+    }
+    .nav-dropdown-item:hover { 
+        background-color: var(--bg-color); 
+    }
+    .header-right { 
+        margin-left: auto; display: flex; align-items: center; gap: 0.5rem; 
+    }
+    .notification-badge {
+        position: absolute; top: 5px; right: 10px; background-color: #ef4444; color: white;
+        width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; font-weight: bold;
+        display: flex; align-items: center; justify-content: center; border: 2px solid #1e3a8a;
+    }
+    .profile-avatar { 
+        width: 32px; height: 32px; border-radius: 50%; margin-right: -0.25rem; object-fit: cover; 
+    }
+    .notification-dropdown, .profile-dropdown {
+        display: none; position: absolute; top: 120%; right: 0; background-color: var(--surface-color);
+        color: var(--text-primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+        width: 320px; z-index: 1001; border: 1px solid var(--border-color);
+    }
+    .notification-container.active .notification-dropdown, 
+    .profile-container.active .profile-dropdown { 
+        display: block; 
+    }
+    .notification-header, .profile-info { 
+        padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; 
+        justify-content: space-between; align-items: center; 
+    }
+    .notification-list { max-height: 300px; overflow-y: auto; }
+    .notification-item { display: flex; gap: 1rem; padding: 1rem; }
+    .notification-item:hover { background-color: var(--bg-color); }
+    .notification-title { font-weight: 600; margin-bottom: 0.25rem; }
+    .notification-text, .profile-details p { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+    .notification-time { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+    .profile-info { gap: 1rem; }
+    .profile-avatar-large { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .profile-details h4 { margin: 0; }
+    .profile-menu button {
+        display: flex; width: 100%; text-align: left; padding: 0.75rem 1rem; gap: 0.75rem; 
+        color: var(--text-primary); border-radius: 0; font-size: 1rem; background-color: transparent;
+        border: none; cursor: pointer;
+    }
+    .profile-menu button:hover { background-color: var(--bg-color); }
+    .profile-menu-divider { height: 1px; background-color: var(--border-color); margin: 0.5rem 0; }
+
+    /* ✅ Page-Specific CSS */
+    .main-content { padding: 2rem 0; }
+    .page-header { margin-bottom: 2rem; text-align: center; }
+    .page-header h1 { font-size: 2rem; }
+    .content-wrapper {
+        max-width: 600px;
+        margin: auto;
+        background: var(--surface-color);
+        padding: 2rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+    }
+    .hidden { display: none; }
+    .content-wrapper button {
+        padding: 12px; margin-top: 15px; width: 100%; background-color: var(--primary-color);
+        color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 1rem;
+        transition: background-color 0.2s;
+    }
+    .content-wrapper button:hover { background-color: var(--primary-hover); }
+    .content-wrapper input, .content-wrapper select {
+        width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box;
+        border: 1px solid var(--border-color); border-radius: 6px;
+    }
+    .content-wrapper h2, .content-wrapper h3 { text-align: center; color: var(--text-primary); }
+    .entry-item {
+        border: 1px solid var(--border-color); padding: 15px; margin-bottom: 10px;
+        border-radius: 8px; background: var(--bg-color);
+    }
+    .entry-item p { margin: 4px 0; }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+  <div class="container header-container">
+    <nav class="header-nav">
+      <div class="logo">
+        <img src="logo.jpg" alt="Kochi Metro Logo" />
+      </div>
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <div class="nav-dropdown">
+        <button class="nav-item dropdown-toggle"><i class="fas fa-cogs"></i><span>Operations</span><i class="fas fa-chevron-down dropdown-arrow"></i></button>
+        <div class="nav-dropdown-content">
+          <a href="train-operations.html" class="nav-dropdown-item"><i class="fas fa-train"></i><span>Train Operations</span></a>
+          <a href="verify-operations.html" class="nav-dropdown-item"><i class="fas fa-check-circle"></i><span>Verify Operations</span></a>
+        </div>
+      </div>
+      <a href="management.html" class="nav-item"><i class="fas fa-users-cog"></i><span>Management</span></a>
+      <a href="staff-management.html" class="nav-item"><i class="fas fa-users"></i><span>Staff</span></a>
+      <a href="schedule-management.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a>
+      <a href="live-map.html" class="nav-item"><i class="fas fa-map-marked-alt"></i><span>Live Map</span></a>
+      <a href="reports1.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+      <a href="multitrack.html" class="nav-item"><i class="fas fa-route"></i><span>Multitrack</span></a>
+    </nav>
+    <div class="header-right">
+        <div class="notification-container">
+          <button class="notification-btn" id="notification-btn">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <div class="notification-dropdown" id="notification-dropdown">
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <span>3 new</span>
+            </div>
+            <div class="notification-list">
+              <div class="notification-item">
+                <div class="notification-icon"><i class="fas fa-exclamation-triangle" style="color: #f59e0b"></i></div>
+                <div class="notification-content">
+                  <div class="notification-title">Train Delay Alert</div>
+                  <div class="notification-text">Train K101 delayed by 5 minutes</div>
+                  <div class="notification-time">2 minutes ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-container">
+          <button class="profile-btn" id="profile-btn">
+            <img src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop&crop=face" alt="Profile" class="profile-avatar" />
+            <span>Admin User</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <div class="profile-info">
+              <img src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face" alt="Profile" class="profile-avatar-large" />
+              <div class="profile-details">
+                <h4>Admin User</h4>
+                <p>System Administrator</p>
+              </div>
+            </div>
+            <div class="profile-menu">
+              <button><i class="fas fa-user-cog"></i><span>Profile Settings</span></button>
+              <button><i class="fas fa-key"></i><span>Change Password</span></button>
+              <div class="profile-menu-divider"></div>
+              <button><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+</header>
+  
+<main class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>Department Portal</h1>
+        </div>
+
+        <div class="content-wrapper" id="mainMenu">
+            <h2>Select Department</h2>
+            <button onclick="handleDepartmentClick('revenue')">Revenue Department</button>
+            <button onclick="handleDepartmentClick('finance')">Finance Department</button>
+        </div>
+
+        <div class="content-wrapper hidden" id="loginForm">
+            <h2>Demo Login</h2>
+            <button onclick="demoLogin()">Login as Demo User</button>
+        </div>
+
+        <div class="content-wrapper hidden" id="revenueDashboard">
+            <h2>Revenue Dashboard</h2>
+            <input type="text" id="companyName" placeholder="Company Name" />
+            <input type="text" id="companyDesc" placeholder="Description" />
+            <input type="number" id="companyRupees" placeholder="Revenue (₹)" />
+            <button onclick="addRevenueEntry()">Add Revenue Entry</button>
+            <h3>Revenue Entries</h3>
+            <div id="internalContentList"></div>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+        <div class="content-wrapper hidden" id="financeDashboard">
+            <h2>Finance Dashboard</h2>
+            <h3>Revenue Entries</h3>
+            <div id="financeRevenueEntries"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="window.open('admin-report.html', '_blank')">Open Admin Report</button>
+            </div>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+</main>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- ✅ START: Navbar Dropdown Logic ---
+    const dropdownTriggers = [
+        { selector: '.dropdown-toggle', container: '.nav-dropdown' },
+        { selector: '#notification-btn', container: '.notification-container' },
+        { selector: '#profile-btn', container: '.profile-container' }
+    ];
+    dropdownTriggers.forEach(triggerInfo => {
+        document.querySelectorAll(triggerInfo.selector).forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const container = trigger.closest(triggerInfo.container);
+                const isActive = container.classList.contains('active');
+                document.querySelectorAll('.nav-dropdown, .notification-container, .profile-container').forEach(d => d.classList.remove('active'));
+                if (!isActive) {
+                    container.classList.add('active');
+                }
+            });
+        });
+    });
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-dropdown, .notification-container, .profile-container')) {
+            document.querySelectorAll('.nav-dropdown, .notification-container, .profile-container').forEach(d => d.classList.remove('active'));
+        }
+    });
+    // --- ✅ END: Navbar Dropdown Logic ---
+
+    // --- Department Portal Logic ---
+    const revenueEntriesKey = 'revenueEntries';
+
+    window.handleDepartmentClick = function(dept) {
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+        window.currentDept = dept;
+    }
+
+    window.demoLogin = function() {
+        if (window.currentDept === 'revenue') {
+            showRevenueDashboard();
+        } else if (window.currentDept === 'finance') {
+            showFinanceDashboard();
+        }
+    }
+
+    function showRevenueDashboard() {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('revenueDashboard').classList.remove('hidden');
+        loadRevenueEntries();
+    }
+
+    window.addRevenueEntry = function() {
+        const company = document.getElementById('companyName').value.trim();
+        const desc = document.getElementById('companyDesc').value.trim();
+        const rupees = parseFloat(document.getElementById('companyRupees').value.trim());
+
+        if (company && desc && !isNaN(rupees)) {
+            const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+            const ticketTotal = tickets.reduce((sum, t) => sum + parseFloat(t.fare), 0);
+
+            let entries = JSON.parse(localStorage.getItem(revenueEntriesKey)) || [];
+            entries.push({ company, desc, rupees, ticketRupees: ticketTotal });
+            localStorage.setItem(revenueEntriesKey, JSON.stringify(entries));
+
+            document.getElementById('companyName').value = '';
+            document.getElementById('companyDesc').value = '';
+            document.getElementById('companyRupees').value = '';
+
+            loadRevenueEntries();
+        } else {
+            alert('Please fill all fields correctly.');
+        }
+    }
+
+    function loadRevenueEntries() {
+        const list = document.getElementById('internalContentList');
+        list.innerHTML = '';
+        const entries = JSON.parse(localStorage.getItem(revenueEntriesKey)) || [];
+
+        if (entries.length === 0) {
+            list.innerHTML = '<p>No entries yet.</p>';
+            return;
+        }
+
+        entries.forEach((entry, index) => {
+            const div = document.createElement('div');
+            div.className = 'entry-item';
+            div.innerHTML = `
+                <p><strong>Entry #${index + 1}</strong></p>
+                <p><strong>Company:</strong> ${entry.company}</p>
+                <p><strong>Description:</strong> ${entry.desc}</p>
+                <p><strong>Revenue (₹):</strong> ₹${entry.rupees.toFixed(2)}</p>
+                <p><strong>Ticket Revenue (₹):</strong> ₹${entry.ticketRupees.toFixed(2)}</p>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function showFinanceDashboard() {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('financeDashboard').classList.remove('hidden');
+        loadFinanceRevenueEntries();
+    }
+
+    function loadFinanceRevenueEntries() {
+        const container = document.getElementById('financeRevenueEntries');
+        container.innerHTML = '';
+        const entries = JSON.parse(localStorage.getItem(revenueEntriesKey)) || [];
+
+        if (entries.length === 0) {
+            container.innerHTML = '<p>No revenue entries available.</p>';
+            return;
+        }
+        entries.forEach((entry, index) => {
+            const block = document.createElement('div');
+            block.className = 'entry-item';
+            block.innerHTML = `
+                <p><strong>Entry #${index + 1}</strong></p>
+                <p><strong>Company:</strong> ${entry.company}</p>
+                <p><strong>Description:</strong> ${entry.desc}</p>
+                <p><strong>Revenue (₹):</strong> ₹${entry.rupees.toFixed(2)}</p>
+            `;
+            container.appendChild(block);
+        });
+    }
+
+    window.logout = function() {
+        document.getElementById('revenueDashboard').classList.add('hidden');
+        document.getElementById('financeDashboard').classList.add('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('mainMenu').classList.remove('hidden');
+    }
+});
+</script>
+
+</body>
+</html>

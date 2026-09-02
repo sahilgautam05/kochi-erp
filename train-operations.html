@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Train Operations - Kochi Metro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <meta name="theme-color" content="#2563eb" />
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --primary-hover: #1d4ed8;
+        --danger-color: #ef4444;
+        --danger-hover: #dc2626;
+        --bg-color: #f3f4f6;
+        --surface-color: #ffffff;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --radius-lg: 12px;
+        --radius-md: 6px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        --status-active-bg: #dcfce7;
+        --status-active-text: #166534;
+        --status-delayed-bg: #fef9c3;
+        --status-delayed-text: #854d0e;
+        --status-maintenance-bg: #e0e7ff;
+        --status-maintenance-text: #3730a3;
+      }
+      [data-theme="dark"] {
+        --bg-color: #111827;
+        --surface-color: #1f2937;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --border-color: #374151;
+        --status-active-bg: #166534;
+        --status-active-text: #dcfce7;
+        --status-delayed-bg: #854d0e;
+        --status-delayed-text: #fef9c3;
+        --status-maintenance-bg: #3730a3;
+        --status-maintenance-text: #e0e7ff;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        transition: background-color 0.3s, color 0.3s;
+      }
+      .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+      .header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow-md);
+      }
+      .header-container { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; }
+      .header-nav { display: flex; align-items: center; gap: 0.5rem; }
+      .logo img { height: 40px; }
+      .nav-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #fff; text-decoration: none; border-radius: var(--radius-md); transition: background-color 0.2s; }
+      .nav-item.active, .nav-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+      .nav-dropdown { position: relative; }
+      .nav-dropdown-content { display: none; position: absolute; top: 100%; left: 0; background-color: #fff; color: #333; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 0.5rem; z-index: 1001; min-width: 200px; }
+      .nav-dropdown.active .nav-dropdown-content { display: block; }
+      .nav-dropdown-item { color: #333; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; text-decoration: none; border-radius: var(--radius-md); }
+      .nav-dropdown-item.active, .nav-dropdown-item:hover { background-color: #f3f4f6; }
+      .header-right { display: flex; align-items: center; gap: 1rem; }
+      .theme-toggle { background: transparent; border: none; color: #fff; font-size: 1.25rem; cursor: pointer; padding: 0.5rem; border-radius: 50%; }
+      .theme-toggle:hover { background-color: rgba(255, 255, 255, 0.1); }
+      .main-content { transition: padding-bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+      .page-header { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0; flex-wrap: wrap; gap: 1rem; }
+      .page-header h1 { font-size: 2.25rem; font-weight: 700; }
+      .page-header p { color: var(--text-secondary); margin-top: 0.25rem; }
+      .page-actions { display: flex; gap: 1rem; }
+      .btn { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; padding: 0.75rem 1.25rem; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-decoration: none; border: 1px solid transparent; }
+      .btn-primary { background-color: var(--primary-color); color: #fff; }
+      .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+      .operations-controls { display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-color); padding: 1rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+      .filter-buttons { display: flex; gap: 0.5rem; }
+      .filter-btn { padding: 0.5rem 1rem; border: 1px solid var(--border-color); background-color: var(--surface-color); color: var(--text-secondary); border-radius: var(--radius-md); font-weight: 500; cursor: pointer; transition: all 0.2s; }
+      .filter-btn.active, .filter-btn:hover { background-color: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+      .search-container { position: relative; }
+      .search-input { padding: 0.5rem 1rem 0.5rem 2.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); width: 250px; transition: all 0.2s; background-color: var(--bg-color); color: var(--text-primary); }
+      .search-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+      .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+      .train-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+      .train-card { background-color: var(--surface-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s; }
+      .train-card.hidden { display: none; }
+      .train-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+      .card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+      .train-id { font-size: 1.25rem; font-weight: 700; }
+      .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+      .status-badge.active { background-color: var(--status-active-bg); color: var(--status-active-text); }
+      .status-badge.delayed { background-color: var(--status-delayed-bg); color: var(--status-delayed-text); }
+      .status-badge.maintenance { background-color: var(--status-maintenance-bg); color: var(--status-maintenance-text); }
+      .card-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+      .info-item { display: flex; align-items: center; gap: 0.75rem; }
+      .info-item i { color: var(--text-secondary); width: 16px; text-align: center; }
+      .info-item span { font-weight: 500; }
+      .card-footer { background-color: var(--bg-color); padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+      .train-time { font-size: 0.875rem; color: var(--text-secondary); }
+      .card-actions { display: flex; gap: 0.5rem; }
+      .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+      .btn-secondary { background-color: var(--surface-color); color: var(--text-secondary); border-color: var(--border-color); }
+      .btn-secondary:hover { background-color: var(--border-color); color: var(--text-primary); }
+      .btn-danger { background-color: transparent; color: var(--danger-color); border-color: var(--danger-color); }
+      .btn-danger:hover { background-color: var(--danger-color); color: #fff; }
+      @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+      .train-card.removing { animation: fadeOut 0.3s forwards; }
+      .details-panel { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--surface-color); border-top: 1px solid var(--border-color); box-shadow: var(--shadow-xl); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 1005; max-height: 50vh; display: flex; flex-direction: column; }
+      .details-panel.is-open { transform: translateY(0); }
+      .details-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+      .details-panel-header h2 { font-size: 1.25rem; margin: 0; }
+      .details-panel-close { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+      .details-panel-content { padding: 1.5rem; overflow-y: auto; }
+      .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+      .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--border-color); }
+      .detail-item:last-child { border-bottom: none; }
+      .detail-item strong { font-size: 0.875rem; color: var(--text-secondary); font-weight: 500; }
+      .detail-item span { font-weight: 600; text-align: right; color: var(--text-primary); }
+    </style>
+</head>
+<body>
+    <header class="header">
+      <div class="container header-container">
+        <nav class="header-nav">
+          <div class="logo">
+            <img src="logo.jpg" alt="Kochi Metro Logo" />
+          </div>
+          <a href="dashboard.html" class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+          <div class="nav-dropdown">
+            <button class="nav-item dropdown-toggle" aria-expanded="false">
+              <i class="fas fa-cogs"></i>
+              <span>Operations</span>
+              <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+            <div class="nav-dropdown-content">
+              <a href="train-operations.html" class="nav-dropdown-item active">
+                <i class="fas fa-train"></i>
+                <span>Train Operations</span>
+              </a>
+              <a href="verify-operations.html" class="nav-dropdown-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Verify Operations</span>
+              </a>
+            </div>
+          </div>
+          <a href="management.html" class="nav-item">
+            <i class="fas fa-users-cog"></i>
+            <span>Management</span>
+          </a>
+          <a href="staff-management.html" class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>Staff</span>
+          </a>
+          <a href="schedule-management.html" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+          </a>
+          <a href="live-map.html" class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Live Map</span>
+          </a>
+          <a href="reports1.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+          </a>
+          <a href="multitrack.html" class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Multitrack</span>
+          </a>
+          <a href="finance-department.html" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Finance</span>
+          </a>
+        </nav>
+        <div class="header-right">
+             <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon theme-icon" id="theme-icon"></i>
+            </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div>
+            <h1>Train Operations</h1>
+            <p>Monitor and manage all train operations in real-time</p>
+          </div>
+          <div class="page-actions">
+            <a href="add-train.html" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Add Train
+            </a>
+          </div>
+        </div>
+
+        <div class="operations-controls">
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">All Trains</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="delayed">Delayed</button>
+            <button class="filter-btn" data-filter="maintenance">Maintenance</button>
+          </div>
+          <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" id="train-search" placeholder="Search by ID, route, driver..." />
+          </div>
+        </div>
+
+        <section class="train-grid" id="train-grid"></section>
+      </div>
+    </main>
+
+    <section id="details-panel" class="details-panel" aria-hidden="true">
+      <header class="details-panel-header">
+        <h2 id="details-panel-title">Train Details</h2>
+        <button class="details-panel-close" aria-label="Close details panel">&#215;</button>
+      </header>
+      <div class="details-panel-content" id="details-panel-body"></div>
+    </section>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // --- ✅ NAVBAR DROPDOWN LOGIC ---
+      const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+      dropdownToggles.forEach(toggle => {
+          toggle.addEventListener('click', () => {
+              const dropdown = toggle.closest('.nav-dropdown');
+              dropdown.classList.toggle('active');
+              const isExpanded = dropdown.classList.contains('active');
+              toggle.setAttribute('aria-expanded', isExpanded);
+          });
+      });
+      window.addEventListener('click', (e) => {
+          if (!e.target.closest('.nav-dropdown')) {
+              document.querySelectorAll('.nav-dropdown.active').forEach(d => {
+                  d.classList.remove('active');
+                  d.querySelector('.dropdown-toggle').setAttribute('aria-expanded', 'false');
+              });
+          }
+      });
+
+      // --- THEME SWITCHER LOGIC ---
+      const themeToggle = document.getElementById("theme-toggle");
+      const themeIcon = document.getElementById("theme-icon");
+      const docElement = document.documentElement;
+      const setTheme = (theme) => {
+        docElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+        themeIcon.className = `fas ${theme === "dark" ? "fa-sun" : "fa-moon"} theme-icon`;
+      };
+      themeToggle.addEventListener("click", () => {
+        const currentTheme = docElement.getAttribute("data-theme");
+        setTheme(currentTheme === "dark" ? "light" : "dark");
+      });
+      const savedTheme = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(savedTheme || (prefersDark ? "dark" : "light"));
+
+      // --- ✅ REVISED DATA HANDLING LOGIC ---
+      const trainGrid = document.getElementById("train-grid");
+      const mainContent = document.querySelector(".main-content");
+      const detailsPanel = document.getElementById("details-panel");
+      const detailsPanelTitle = document.getElementById("details-panel-title");
+      const detailsPanelBody = document.getElementById("details-panel-body");
+      const detailsPanelCloseBtn = document.querySelector(".details-panel-close");
+      const TRAINS_KEY = "trains";
+      let allTrains = [];
+
+      function initializeData() {
+        const storedTrains = localStorage.getItem(TRAINS_KEY);
+        if (storedTrains === null) {
+          // First time visit: seed localStorage with initial data
+          const initialTrains = [
+            { id: "K101", name: "Kochi Express", route: "Aluva - Tripunithura", driver: "Rajesh Kumar", next: "Edappally", status: "active", fitness: "Certified OK", jobCard: "Completed", mileage: 54200, cleaningDue: "2025-10-05", branding: "Adani Group", bayPosition: "Bay 04" },
+            { id: "K102", name: "Periyar Voyager", route: "Tripunithura - Aluva", driver: "Priya Nair", next: "Kakkanad", status: "delayed", fitness: "Certified OK", jobCard: "Pending", mileage: 71340, cleaningDue: "2025-09-30", branding: "Lulu Group", bayPosition: "Track 2" },
+            { id: "K104", name: "Depot Unit 04", route: "Maintenance Mode", driver: "N/A", next: "Depot", status: "maintenance", fitness: "Under Inspection", jobCard: "In Progress", mileage: 120500, cleaningDue: "2025-09-28", branding: "None", bayPosition: "Depot Bay 1" },
+          ];
+          localStorage.setItem(TRAINS_KEY, JSON.stringify(initialTrains));
+          allTrains = initialTrains;
+        } else {
+          // Subsequent visits: load directly from localStorage
+          allTrains = JSON.parse(storedTrains);
+        }
+      }
+
+      // --- RENDER & EVENT FUNCTIONS (Mostly unchanged, but now more robust) ---
+      function createTrainCard(train) {
+        const card = document.createElement("div");
+        card.className = "train-card";
+        card.dataset.id = train.id;
+        card.dataset.status = train.status;
+        card.dataset.searchText = `${train.id} ${train.name} ${train.route} ${train.driver}`.toLowerCase();
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="train-id">${train.id}</div>
+                <span class="status-badge ${train.status}">${train.status}</span>
+            </div>
+            <div class="card-body">
+                <div class="info-item"><i class="fas fa-signature"></i> <span>${train.name || "N/A"}</span></div>
+                <div class="info-item"><i class="fas fa-route"></i> <span>${train.route}</span></div>
+                <div class="info-item"><i class="fas fa-user-tie"></i> <span>Driver: ${train.driver}</span></div>
+                <div class="info-item"><i class="fas fa-map-marker-alt"></i> <span>Next: ${train.next}</span></div>
+            </div>
+            <div class="card-footer">
+                <div class="train-time">Last updated: now</div>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-secondary" data-action="details">Details</button>
+                    <button class="btn btn-sm btn-danger" data-action="remove"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>`;
+        return card;
+      }
+      function renderTrains() {
+        trainGrid.innerHTML = "";
+        allTrains.forEach((train) => trainGrid.appendChild(createTrainCard(train)));
+      }
+      function removeTrain(trainId) {
+        allTrains = allTrains.filter((train) => train.id !== trainId);
+        localStorage.setItem(TRAINS_KEY, JSON.stringify(allTrains));
+      }
+      function openDetailsPanel(trainId) {
+        const train = allTrains.find((t) => t.id === trainId);
+        if (!train) return;
+        detailsPanelTitle.innerHTML = `<i class="fas fa-train"></i> Train Details - ${train.id}`;
+        detailsPanelBody.innerHTML = `
+            <div class="details-grid">
+                <div class="detail-item"><strong>Train Name</strong><span>${train.name || "N/A"}</span></div>
+                <div class="detail-item"><strong>Route</strong><span>${train.route}</span></div>
+                <div class="detail-item"><strong>Driver</strong><span>${train.driver}</span></div>
+                <div class="detail-item"><strong>Next Station</strong><span>${train.next}</span></div>
+                <div class="detail-item"><strong>Bay Position</strong><span>${train.bayPosition || "N/A"}</span></div>
+                <div class="detail-item"><strong>Fitness</strong><span>${train.fitness || "N/A"}</span></div>
+                <div class="detail-item"><strong>Job Card</strong><span>${train.jobCard || "N/A"}</span></div>
+                <div class="detail-item"><strong>Mileage</strong><span>${train.mileage ? train.mileage.toLocaleString() + " km" : "N/A"}</span></div>
+                <div class="detail-item"><strong>Cleaning Due</strong><span>${train.cleaningDue || "N/A"}</span></div>
+                <div class="detail-item"><strong>Branding</strong><span>${train.branding || "N/A"}</span></div>
+            </div>`;
+        detailsPanel.classList.add("is-open");
+        detailsPanel.setAttribute("aria-hidden", "false");
+        // ✅ Add padding to main content to avoid overlap
+        mainContent.style.paddingBottom = `${detailsPanel.offsetHeight}px`;
+      }
+      function closeDetailsPanel() {
+        detailsPanel.classList.remove("is-open");
+        detailsPanel.setAttribute("aria-hidden", "true");
+        // ✅ Reset padding
+        mainContent.style.paddingBottom = '0px';
+      }
+
+      // --- EVENT LISTENERS ---
+      trainGrid.addEventListener("click", function (e) {
+        const card = e.target.closest(".train-card");
+        if (!card) return;
+        const trainId = card.dataset.id;
+        const actionTarget = e.target.closest("[data-action]");
+        if (actionTarget) {
+          const action = actionTarget.dataset.action;
+          if (action === "remove") {
+            if (confirm(`Are you sure you want to remove train ${trainId}?`)) {
+              card.classList.add("removing");
+              removeTrain(trainId);
+              card.addEventListener("animationend", () => card.remove());
+            }
+          } else if (action === "details") {
+            openDetailsPanel(trainId);
+          }
+        }
+      });
+      detailsPanelCloseBtn.addEventListener("click", closeDetailsPanel);
+      document.querySelectorAll(".filter-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".filter-btn").forEach((btn) => btn.classList.remove("active"));
+          button.classList.add("active");
+          const filter = button.dataset.filter;
+          document.querySelectorAll(".train-card").forEach((card) => {
+            card.style.display = (filter === "all" || card.dataset.status === filter) ? "" : "none";
+          });
+        });
+      });
+      document.getElementById("train-search").addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll(".train-card").forEach((card) => {
+            card.style.display = card.dataset.searchText.includes(searchTerm) ? "" : "none";
+        });
+      });
+
+      // --- INITIALIZE & RENDER ---
+      initializeData();
+      renderTrains();
+    });
+    </script>
+</body>
+</html>

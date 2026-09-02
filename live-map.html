@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kochi Metro - Live Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --surface: #ffffff;
+  --bg: #f9fafb;
+  --text: #1e293b;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 12px;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  padding-top: 70px; /* Space for fixed header */
+}
+/* Header & Navbar */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e3a8a;
+  padding: 0.75rem 1.5rem;
+  box-shadow: var(--shadow);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  color: white;
+}
+.header-nav { display: flex; gap: 0.5rem; align-items: center; }
+.header-nav a, .dropdown-toggle {
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: 0.2s;
+  background: transparent;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.header-nav a:hover, .header-nav a.active, .dropdown-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.nav-dropdown { position: relative; }
+.nav-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 120%;
+  left: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  min-width: 200px;
+  z-index: 10;
+  flex-direction: column;
+  padding: 0.5rem;
+  border: 1px solid #eee;
+}
+.nav-dropdown.active .nav-dropdown-content { display: flex; }
+.nav-dropdown-content a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: var(--text);
+  border-radius: 8px;
+}
+.nav-dropdown-content a:hover { background: var(--primary); color: #fff; }
+.actions { display: flex; gap: 1rem; align-items: center; }
+.actions button {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  transition: 0.3s;
+  background: transparent;
+  color: white;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.logo img { height: 40px; width: auto; margin-right: 1rem; }
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 320px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  align-items: start;
+}
+.sidebar, .right-panel { 
+  background: var(--surface); 
+  border-radius: var(--radius); 
+  box-shadow: var(--shadow); 
+  padding: 1.5rem; 
+  height: calc(100vh - 70px - 3rem);
+  overflow-y: auto;
+}
+#map { 
+  height: calc(100vh - 70px - 3rem); 
+  border-radius: var(--radius); 
+  box-shadow: var(--shadow); 
+}
+.sidebar h2, .right-panel h2 { font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem; }
+.station-list ul { list-style: none; padding: 0; margin: 0; }
+.station-item { padding: 0.75rem; border-radius: var(--radius); cursor: pointer; font-weight: 500; transition: 0.2s; }
+.station-item:hover { background: var(--primary); color: #fff; }
+.card { background: #f1f5f9; border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
+.card h3 { margin: 0; font-size: 1rem; color: #475569; }
+.card span { font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+.station-label {
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: bold;
+  border: 1px solid #2563eb;
+}
+/* Dark Mode */
+body.dark {
+  --primary: #3b82f6; --primary-hover: #2563eb; --surface: #1f2937;
+  --bg: #111827; --text: #f3f4f6; --shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+body.dark .card { background: #334155; }
+body.dark .card h3 { color: #cbd5e1; }
+</style>
+</head>
+<body>
+<header>
+  <nav class="header-nav">
+    <div class="logo"><img src="logo.jpg" alt="logo"></div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+    <div class="nav-dropdown">
+      <button class="dropdown-toggle"><i class="fas fa-cogs"></i><span>Operations</span><i class="fas fa-chevron-down"></i></button>
+      <div class="nav-dropdown-content">
+        <a href="train-operations.html"><i class="fas fa-train"></i><span>Train Operations</span></a>
+        <a href="verify-operations.html"><i class="fas fa-check-circle"></i><span>Verify Operations</span></a>
+      </div>
+    </div>
+    <a href="management.html" class="nav-item"><i class="fas fa-users-cog"></i><span>Management</span></a>
+    <a href="staff-management.html" class="nav-item"><i class="fas fa-users"></i><span>Staff</span></a>
+    
+    <a href="live-map.html" class="nav-item active"><i class="fas fa-map-marked-alt"></i><span>Live Map</span></a>
+    <a href="reports1.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+    <a href="multitrack.html" class="nav-item"><i class="fas fa-route"></i><span>Multitrack</span></a>
+    <a href="finance-department.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Finance</span></a>
+  </nav>
+  <div class="actions">
+    <button id="refreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <button id="themeBtn"><i class="fas fa-moon"></i></button>
+  </div>
+</header>
+
+<div class="container">
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>Stations</h2>
+        <div class="station-list"><ul id="stationUL"></ul></div>
+      </aside>
+
+      <section id="map"></section>
+
+      <aside class="right-panel">
+        <h2>Live Status</h2>
+        <div class="card"><h3>Trains Running</h3><span>1</span></div>
+        <div class="card"><h3>On-Time</h3><span>1</span></div>
+        <div class="card"><h3>Delayed</h3><span>0</span></div>
+        <div class="card"><h3>Active Staff</h3><span>48</span></div>
+        <hr style="border:0; border-top: 1px solid var(--border-color); margin: 1rem 0;"/>
+        <h2>Selected Station</h2>
+        <div id="stationDetails">Click a station to view details.</div>
+      </aside>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Navbar Dropdown Logic ---
+  const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+  dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+          const dropdown = toggle.closest('.nav-dropdown');
+          dropdown.classList.toggle('active');
+      });
+  });
+  window.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-dropdown')) {
+          document.querySelectorAll('.nav-dropdown.active').forEach(d => d.classList.remove('active'));
+      }
+  });
+
+  // --- Map and Station Logic ---
+  const stationData = [ { name: "Aluva", lat: 10.1114, lng: 76.3516 }, { name: "Pulinchodu", lat: 10.1018, lng: 76.3482 }, { name: "Companypady", lat: 10.0925, lng: 76.3450 }, { name: "Ambattukavu", lat: 10.0833, lng: 76.3395 }, { name: "Muttom", lat: 10.0734, lng: 76.3363 }, { name: "Kalamassery", lat: 10.0593, lng: 76.3260 }, { name: "Cochin University (CUSAT)", lat: 10.0486, lng: 76.3208 }, { name: "Pathadipalam", lat: 10.0375, lng: 76.3128 }, { name: "Edapally", lat: 10.0259, lng: 76.3087 }, { name: "Changampuzha Park", lat: 10.0160, lng: 76.3041 }, { name: "Palarivattom", lat: 10.0102, lng: 76.2999 }, { name: "JLN Stadium", lat: 9.9993, lng: 76.2986 }, { name: "Kaloor", lat: 9.9872, lng: 76.2952 }, { name: "Town Hall", lat: 9.9816, lng: 76.2906 }, { name: "M.G. Road", lat: 9.9762, lng: 76.2857 }, { name: "Maharaja's College", lat: 9.9698, lng: 76.2807 }, { name: "Ernakulam South", lat: 9.9574, lng: 76.2765 }, { name: "Kadavanthra", lat: 9.9507, lng: 76.2762 }, { name: "Elamkulam", lat: 9.9411, lng: 76.2760 }, { name: "Vyttila", lat: 9.9323, lng: 76.2800 }, { name: "Thaikoodam", lat: 9.9244, lng: 76.2953 }, { name: "Petta (Pettah)", lat: 9.9182, lng: 76.3025 }, { name: "Vadakkekotta", lat: 9.9170, lng: 76.3105 }, { name: "SN Junction", lat: 9.9160, lng: 76.3185 }, { name: "Tripunithura (Terminal)", lat: 9.9141, lng: 76.3262 } ];
+  const map = L.map('map').setView([10.02, 76.3], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { 
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 19 
+  }).addTo(map);
+
+  const polyCoords = stationData.map(s => [s.lat, s.lng]);
+  L.polyline(polyCoords, { color: '#2563eb', weight: 4, opacity: 0.8 }).addTo(map);
+  const bounds = L.latLngBounds(polyCoords);
+
+  const stationUL = document.getElementById('stationUL');
+  const stationDetails = document.getElementById('stationDetails');
+  const markers = [];
+
+  function getNextTrainTime(index) {
+    return Math.floor(Math.random() * 4) + 2; // Random time between 2-5 mins
+  }
+
+  function showStationDetails(idx) {
+    const s = stationData[idx];
+    map.setView([s.lat, s.lng], 16, { animate: true, duration: 1 });
+    markers[idx].openTooltip();
+    const nextTrain = getNextTrainTime(idx);
+    stationDetails.innerHTML = `
+      <h3>${s.name}</h3>
+      <p>Status: <span style="color:#28a745;">Operational</span></p>
+      <p>Next Train: <strong>${nextTrain} min</strong></p>
+    `;
+  }
+
+  stationData.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.className = 'station-item';
+    li.textContent = `${i+1}. ${s.name}`;
+    stationUL.appendChild(li);
+
+    const marker = L.circleMarker([s.lat, s.lng], {
+      radius: 6, fillColor: '#2563eb', color: '#fff',
+      weight: 2, opacity: 1, fillOpacity: 1
+    }).addTo(map);
+    
+    // ✅ RESTORED: Tooltip for station names
+    marker.bindTooltip(s.name, { permanent: false, direction: 'right', offset: [10, 0], className: 'station-label' });
+    markers.push(marker);
+
+    li.addEventListener('click', () => showStationDetails(i));
+    marker.on('click', () => showStationDetails(i));
+  });
+
+  map.flyToBounds(bounds.pad(0.1));
+
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    themeBtn.innerHTML = document.body.classList.contains('dark') 
+      ? '<i class="fas fa-sun"></i>' 
+      : '<i class="fas fa-moon"></i>';
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    map.flyToBounds(bounds.pad(0.1), { duration: 1 });
+  });
+
+  // ✅ RESTORED: Train Icon Animation Logic
+  const trainIcon = L.icon({
+    iconUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAF6SURBVEiJrdW/axRBFMbx9yYBEbGSIIiFlY2Nij9A8F+wCEJQsDEIYiGCjWDjbyCgEEu0tRC0SBFIfgCCsLEgpr8gWJgVDsZczs7uzknggd129zPzzTfn3h3iP7/jZR3AKe4wwwu4hM/4kSeQdQ/gBD6j+JJ5bd0g9uM8zPLmCVwmuCePOB/Psq8E9yAO4mge4yUe4xleYJ18zOAF/GccaQ28wA28xXgYc7P9eMRrPNpAq8F1PEpA68B13MloFVgGj/GkAd4mgdc5xYkX9iZwE/8xAv8kSAnu5eC24Srzb09Y20jTOIK2s6v9iOFc3vEaLzFzRt0/k8T3kF+I63mC/CGOs7xGu9wI2/gWd/VTCrch1u4mmf1XW4Tz/ADZ+FfC04nS2Kcgx+RYwGP8K+FZy1Po1o1x/gpY/+KkAGL8J/FZwE/8w2M+R38DTEc/w/I8Yf/Ud/Af4AT8Yfi/Kv4DNmG/AD0AAAAASUVORK5CYII=",
+    iconSize: [24, 24], iconAnchor: [12, 12]
+  });
+
+  const trainMarker = L.marker(polyCoords[0], { icon: trainIcon, zIndexOffset: 1000 }).addTo(map);
+  let currentIndex = 0, progress = 0;
+  let forward = true;
+
+  function moveTrain() {
+    progress += 0.005; // Adjust for speed
+    
+    if (progress >= 1.0) {
+      progress = 0;
+      currentIndex = forward ? currentIndex + 1 : currentIndex - 1;
+      
+      // Reverse direction at ends of the line
+      if (currentIndex >= polyCoords.length - 1) {
+          forward = false;
+      }
+      if (currentIndex <= 0) {
+          forward = true;
+      }
+    }
+
+    let nextIndex = forward ? currentIndex + 1 : currentIndex - 1;
+    // Ensure indices are within bounds
+    nextIndex = Math.max(0, Math.min(polyCoords.length - 1, nextIndex));
+    
+    const [lat1, lng1] = polyCoords[currentIndex];
+    const [lat2, lng2] = polyCoords[nextIndex];
+    
+    const newLat = lat1 + (lat2 - lat1) * progress;
+    const newLng = lng1 + (lng2 - lng1) * progress;
+    
+    trainMarker.setLatLng([newLat, newLng]);
+    
+    requestAnimationFrame(moveTrain);
+  }
+  moveTrain();
+
+});
+</script>
+</body>
+</html>
