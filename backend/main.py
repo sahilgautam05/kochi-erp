@@ -4,6 +4,8 @@ import sys
 # Ensure backend directory is in sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
+FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend") if os.path.exists(os.path.join(ROOT_DIR, "frontend")) else ROOT_DIR
+
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
@@ -59,13 +61,13 @@ app.include_router(auth_sync.router)
 # Custom Route to serve the Landing Page at root /
 @app.get("/", response_class=HTMLResponse)
 def root():
-    index_file = os.path.join(ROOT_DIR, "index.html")
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "Kochi Metro ERP Backend running"}
 
-# Serve all frontend static files (.html, .css, .js, .jpg, etc.) directly from ROOT_DIR
-app.mount("/", StaticFiles(directory=ROOT_DIR, html=True), name="frontend")
+# Serve all frontend static files (.html, .css, .js, .jpg, etc.) directly from FRONTEND_DIR
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,3 +1,3 @@
 import streamlit_app
 
-# Entry point for Streamlit deployment
+# Entrypoint for Streamlit Cloud

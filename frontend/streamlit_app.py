@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import os
+import sys
 
 st.set_page_config(
     page_title="Kochi Metro Rail Limited (KMRL)",
@@ -9,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Hide Streamlit chrome for clean full-page web app display
+# Hide Streamlit UI elements for seamless full-page web app display
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
@@ -30,10 +31,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "frontend") if os.path.exists(os.path.join(BASE_DIR, "frontend")) else BASE_DIR
-
-# Navigation mapping
+# Navigation Bar at Top
 PAGES = {
     "🏠 Landing Page": "index.html",
     "📊 Dashboard": "dashboard.html",
@@ -60,12 +58,13 @@ selected_page_name = st.selectbox(
     label_visibility="collapsed"
 )
 
-target_filename = PAGES[selected_page_name]
-target_path = os.path.join(FRONTEND_DIR, target_filename)
+target_file = PAGES[selected_page_name]
 
-if os.path.exists(target_path):
-    with open(target_path, "r", encoding="utf-8", errors="ignore") as f:
+if os.path.exists(target_file):
+    with open(target_file, "r", encoding="utf-8", errors="ignore") as f:
         html_code = f.read()
+
+    # Render native HTML/CSS/JS frontend directly
     components.html(html_code, height=950, scrolling=True)
 else:
-    st.error(f"Page file '{target_filename}' not found in {FRONTEND_DIR}.")
+    st.error(f"Page file {target_file} not found in project directory.")
