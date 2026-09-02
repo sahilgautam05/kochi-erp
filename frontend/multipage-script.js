@@ -1037,8 +1037,8 @@ function downloadAlertsReport() {
 // ---------------------
 // Auto-load charts on page load
 // ---------------------
-window.onload = () => {
-    loadStatusChart();
-    loadWhatIfChart();
-    loadAlertsChart();
-};
+window.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById("statusChart")) loadStatusChart();
+    if (document.getElementById("whatifChart")) loadWhatIfChart();
+    if (document.getElementById("alertsChart")) loadAlertsChart();
+});
