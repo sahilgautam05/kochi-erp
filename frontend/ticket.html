@@ -486,9 +486,56 @@
             img.alt = "QR Code";
             qrcodeDiv.appendChild(img);
           })
-          .catch((error) => {
-            console.error("QR Code generation error:", error);
-          });
+        // Save ticket to backend & send email
+        fetch("/api/tickets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: passengerName,
+            from: fromStation,
+            to: toStation,
+            passengers: passengerCount,
+            fare: totalFare,
+            email: email,
+            phone: phone,
+            payment: paymentSelect.options[paymentSelect.selectedIndex].text
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log("Ticket registered & email dispatched:", data);
+          let emailNotice = document.getElementById("emailNotice");
+          if (!emailNotice) {
+            emailNotice = document.createElement("div");
+            emailNotice.id = "emailNotice";
+            emailNotice.style.background = "#ecfdf5";
+            emailNotice.style.border = "1px solid #6ee7b7";
+            emailNotice.style.color = "#065f46";
+            emailNotice.style.borderRadius = "8px";
+            emailNotice.style.padding = "12px";
+            emailNotice.style.marginTop = "14px";
+            emailNotice.style.fontSize = "13px";
+            ticketAside.insertBefore(emailNotice, downloadBtn);
+          }
+          emailNotice.innerHTML = `📩 <b>e-Ticket Sent to Email!</b><br>A digital copy with QR pass and invoice has been delivered to <u>${email}</u>.`;
+        })
+        .catch(err => {
+          console.error("Error saving ticket / sending email:", err);
+        });
+
+        // Save ticket to localStorage for admin report
+        const ticketInfo = {
+          name: passengerName,
+          from: fromStation,
+          to: toStation,
+          fare: totalFare,
+          date: dateStr,
+          email: email
+        };
+
+        const savedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+        savedTickets.push(ticketInfo);
+        localStorage.setItem("tickets", JSON.stringify(savedTickets));
 
         detailsForm.classList.add("hidden");
         ticketAside.classList.remove("hidden");
@@ -500,108 +547,15 @@
           alert("No ticket to download!");
           return;
         }
-        // Use html2canvas to capture the ticket card div
         html2canvas(ticketCard).then((canvas) => {
-          // Create a link and trigger download
           const link = document.createElement("a");
           link.download = "kochi-metro-ticket.png";
           link.href = canvas.toDataURL("image/png");
           link.click();
         });
       });
-      //
-      //
-      //
-      //
-      //
-      //
-      <!-- ...everything remains exactly the same above ... -->
 
-      calcBtn.addEventListener("click", () => {
-        // Validate details
-        const email = emailInput.value.trim();
-        const phone = phoneInput.value.trim();
-
-        if (!email) {
-          alert("Please enter your email.");
-          return;
-        }
-        if (!phone || !/^\d{10}$/.test(phone)) {
-          alert("Please enter a valid 10-digit phone number.");
-          return;
-        }
-
-        // Calculate distance
-        const fromStation = fromSelect.value;
-        const toStation = toSelect.value;
-        const passengerName = nameInput.value.trim();
-        const passengerCount = parseInt(countInput.value, 10);
-
-        const distance =
-          Math.abs(stations[fromStation] - stations[toStation]) || 0;
-
-        const totalFare = distance * FARE_PER_KM * passengerCount;
-
-        // Date and time
-        const now = new Date();
-        const dateStr = now.toLocaleDateString();
-        const timeStr = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        // Update ticket info
-        ticketFrom.textContent = fromStation.replace(/_/g, " ");
-        ticketTo.textContent = toStation.replace(/_/g, " ");
-        distanceKmSpan.textContent = distance;
-        fareAmount.textContent = `₹${totalFare.toFixed(2)}`;
-        ticketName.textContent = passengerName;
-        ticketCount.textContent = `${passengerCount} passenger(s)`;
-        ticketDate.textContent = dateStr;
-        ticketTime.textContent = timeStr;
-        ticketMeta.textContent = `Paid with ${paymentSelect.options[paymentSelect.selectedIndex].text}`;
-
-        // Generate QR code data string
-        const qrData = `Name: ${passengerName}\nFrom: ${fromStation.replace(
-          /_/g,
-          " "
-        )}\nTo: ${toStation.replace(/_/g, " ")}\nPassengers: ${passengerCount}\nFare: ₹${totalFare.toFixed(
-          2
-        )}\nDate: ${dateStr}\nTime: ${timeStr}`;
-
-        // Clear previous QR
-        qrcodeDiv.innerHTML = "";
-
-        // Generate QR code as an image inside the div
-        QRCode.toDataURL(qrData, { width: 200, margin: 1 })
-          .then((url) => {
-            const img = document.createElement("img");
-            img.src = url;
-            img.alt = "QR Code";
-            qrcodeDiv.appendChild(img);
-          })
-          .catch((error) => {
-            console.error("QR Code generation error:", error);
-          });
-
-        // ✅ Save ticket to localStorage for admin report
-        const ticketInfo = {
-          name: passengerName,
-          from: fromStation,
-          to: toStation,
-          fare: totalFare,
-          date: dateStr
-        };
-
-        const savedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
-        savedTickets.push(ticketInfo);
-        localStorage.setItem("tickets", JSON.stringify(savedTickets));
-
-        // Show ticket section
-        detailsForm.classList.add("hidden");
-        ticketAside.classList.remove("hidden");
-      });
-      //after ticket generation  generate a button for back to userpage.html
+      // Button to return to User Page
       const backButton = document.createElement("button");
       backButton.classList.add("back-button");
       backButton.innerHTML = 'Back to User Page';
@@ -609,7 +563,6 @@
         window.location.href = "userpage.html";
       });
       ticketAside.appendChild(backButton);
-      //apply css to back button like a download button
       backButton.style.marginTop = "10px";
       backButton.style.background = "var(--accent)";
       backButton.style.color = "white";
@@ -618,6 +571,8 @@
       backButton.style.border = "0";
       backButton.style.fontWeight = "600";
       backButton.style.cursor = "pointer";
+      backButton.style.width = "100%";
+      backButton.style.maxWidth = "500px";
 
     </script>
   </body>

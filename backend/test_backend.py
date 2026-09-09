@@ -93,10 +93,22 @@ def run_tests():
         "from": "Aluva",
         "to": "Edapally",
         "passengers": 1,
+        "email": "passenger@example.com",
         "payment": "UPI"
     })
     assert res.status_code == 201
-    print(f"PASS: POST /api/tickets -> Ticket #{res.json()['ticket_id']} booked")
+    ticket_payload = res.json()
+    assert ticket_payload["email_sent"] is True
+    print(f"PASS: POST /api/tickets -> Ticket #{ticket_payload['ticket_id']} booked & e-Ticket emailed to {ticket_payload['email']}")
+
+    # 8b. Resend Ticket Email
+    res = client.post("/api/tickets/send-email", json={
+        "ticket_id": ticket_payload["ticket_id"],
+        "email": "passenger@example.com"
+    })
+    assert res.status_code == 200
+    assert res.json()["status"] == "success"
+    print(f"PASS: POST /api/tickets/send-email -> Resent e-Ticket to email successfully")
 
     # 9. Feedback Submissions
     res = client.post("/api/feedback", json={
