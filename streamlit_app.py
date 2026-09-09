@@ -58,8 +58,7 @@ st.markdown("""
     iframe {
         width: 100% !important;
         min-height: 960px !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
+        border: none !important;
         background: #ffffff !important;
     }
 </style>

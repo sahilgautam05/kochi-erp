@@ -63,7 +63,6 @@ function initializeApp() {
         initializeModals();
         initializeNotifications();
         initializeThemeToggle();
-    initializeInteractiveBackground();
         initializeLiveMap();
         initializeTrainOperations();
         initializeVerifyOperations();

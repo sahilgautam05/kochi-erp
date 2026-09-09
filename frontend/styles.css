@@ -323,15 +323,9 @@ body {
     overflow-x: hidden;
 }
 
-/* Interactive background container (full viewport) */
+/* Interactive background container */
 .interactive-bg {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    /* allow clicks through */
-    z-index: 0;
-    /* behind all app chrome which uses higher z-index */
-    mix-blend-mode: normal;
+    display: none !important;
 }
 
 .interactive-bg .interactive-canvas {
