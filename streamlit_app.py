@@ -87,17 +87,12 @@ PAGES = {
     "📋 Admin Revenue Report": "admin-report.html"
 }
 
-# Top Navigation Control
-col_title, col_nav = st.columns([1, 2])
-with col_title:
-    st.markdown("### 🚇 **Kochi Metro Rail Limited**")
-with col_nav:
-    selected_page_label = st.selectbox(
-        "Navigation",
-        list(PAGES.keys()),
-        index=0,
-        label_visibility="collapsed"
-    )
+# Page selector placed in sidebar
+selected_page_label = st.sidebar.selectbox(
+    "Select Page:",
+    list(PAGES.keys()),
+    index=0
+)
 
 target_filename = PAGES[selected_page_label]
 target_path = os.path.join(FRONTEND_DIR, target_filename)
