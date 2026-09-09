@@ -919,7 +919,7 @@ async function loadStatusChart() {
         if (!canvas) return; // Null check
         const ctx = canvas.getContext("2d");
 
-        const res = await fetch("http://127.0.0.1:8000/api/rules");
+        const res = await fetch("/api/rules");
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
 
@@ -940,7 +940,7 @@ async function loadStatusChart() {
 
 
 function downloadStatusReport() {
-    window.open("http://127.0.0.1:8000/api/report/status-pdf", "_blank");
+    window.open("/api/report/status-pdf", "_blank");
 }
 
 // ---------------------
@@ -952,14 +952,14 @@ async function loadWhatIfChart() {
         if (!canvas) return; // Null check
         const ctx = canvas.getContext("2d");
 
-        const defaultsRes = await fetch("http://127.0.0.1:8000/api/whatif/defaults");
+        const defaultsRes = await fetch("/api/whatif/defaults");
         const defaults = await defaultsRes.json();
 
         const k = document.getElementById("whatifK")?.value ? Number(document.getElementById("whatifK").value) : defaults.k;
         const branding_weight = document.getElementById("brandingWeight")?.value ? Number(document.getElementById("brandingWeight").value) : defaults.branding_weight;
         const stabling_weight = document.getElementById("stablingWeight")?.value ? Number(document.getElementById("stablingWeight").value) : defaults.stabling_weight;
 
-        const res = await fetch(`http://127.0.0.1:8000/api/whatif?k=${k}&branding_weight=${branding_weight}&stabling_weight=${stabling_weight}`, { method: "POST" });
+        const res = await fetch(`/api/whatif?k=${k}&branding_weight=${branding_weight}&stabling_weight=${stabling_weight}`, { method: "POST" });
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
 
@@ -990,7 +990,7 @@ function downloadWhatIfReport() {
     const branding_weight = document.getElementById("brandingWeight")?.value ? Number(document.getElementById("brandingWeight").value) : 2000;
     const stabling_weight = document.getElementById("stablingWeight")?.value ? Number(document.getElementById("stablingWeight").value) : 5;
 
-    const url = `http://127.0.0.1:8000/api/report/whatif-pdf?k=${k}&branding_weight=${branding_weight}&stabling_weight=${stabling_weight}`;
+    const url = `/api/report/whatif-pdf?k=${k}&branding_weight=${branding_weight}&stabling_weight=${stabling_weight}`;
     window.open(url, "_blank");
 }
 
@@ -1003,7 +1003,7 @@ async function loadAlertsChart() {
         if (!canvas) return; // Null check
         const ctx = canvas.getContext("2d");
 
-        const res = await fetch("http://127.0.0.1:8000/api/rules");
+        const res = await fetch("/api/rules");
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
 
@@ -1030,7 +1030,7 @@ async function loadAlertsChart() {
 
 
 function downloadAlertsReport() {
-    window.open("http://127.0.0.1:8000/api/report/alerts-pdf", "_blank");
+    window.open("/api/report/alerts-pdf", "_blank");
 }
 
 // ---------------------
