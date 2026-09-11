@@ -289,29 +289,74 @@
         }
       }
       @media (max-width: 768px) {
+        nav {
+          padding: 8px 14px;
+        }
+        nav .logo1 {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
         nav ul {
           flex-direction: column;
         }
-        #why .photos {
+        #why .photos,
+        #why .cards-container {
           flex-direction: column;
           align-items: center;
         }
+        #why .card {
+          width: 100%;
+          max-width: 380px;
+          margin-bottom: 16px;
+        }
         header h1 {
-          font-size: 2rem;
+          font-size: 1.8rem;
+        }
+        header #heroQuote {
+          font-size: 1.6rem;
+        }
+        .content {
+          max-width: 95%;
+          padding: 18px 14px;
+        }
+        .btn-group button {
+          padding: 12px 20px;
+          margin: 6px;
+          font-size: 0.9rem;
         }
         .modal-content {
-          width: 90%;
+          width: 95%;
+          max-width: 440px;
+          padding: 20px 16px;
+        }
+        .logo-text {
+          font-size: 1.3rem !important;
+        }
+        .logo1 img {
+          width: 120px !important;
+          height: 38px !important;
+        }
+      }
+      @media (max-width: 480px) {
+        .logo-text {
+          font-size: 1.05rem !important;
+        }
+        .logo1 img {
+          width: 100px !important;
+          height: 32px !important;
+        }
+        header #heroQuote {
+          font-size: 1.35rem;
+        }
+        .content h3 {
+          font-size: 1rem;
         }
       }
       .logo img {
-        /* Set the size */
         width: 80px;
         height: 40px;
-
-        /* Adjust for more or less rounded corners */
         border-radius: 8px;
-
-        /* Add a simple border */
         border: 2px solid #ddd;
         float: left;
       }
@@ -323,20 +368,21 @@
         background-repeat: no-repeat;
         filter: brightness(0.7);
       }
+      .logo1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
       .logo1 img {
-        /* Set the size */
         width: 170px;
         height: 50px;
-        /* Add a simple border */
         border: 2px solid #ddd;
-        float: left;
+        border-radius: 6px;
       }
       .logo-text {
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: bold;
-        margin-left: 10px;
         color: white;
-        float: left;
       }
     </style>
   </head>
