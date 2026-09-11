@@ -146,6 +146,23 @@ def init_db():
     )
     """)
 
+    # 10. Users Table for Authentication & Profiles
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        full_name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'customer',
+        department TEXT DEFAULT '',
+        designation TEXT DEFAULT '',
+        phone TEXT DEFAULT '',
+        avatar TEXT DEFAULT '',
+        created_at TEXT
+    )
+    """)
+
     conn.commit()
 
     # Seed initial data if tables are empty
@@ -240,6 +257,40 @@ def seed_initial_data(cursor, conn):
             ("Aisha Rahman", "Edapally", "Vyttila", 4.0, 2, 32.0, "Credit/Debit Card", "aisha@example.com", "9876543211", datetime.now().strftime("%d/%m/%Y"), "09:15 AM", "Sample QR Data", datetime.now().isoformat())
         ]
         cursor.executemany("INSERT INTO tickets (passenger_name, from_station, to_station, distance_km, passengers, fare, payment_method, email, phone, ticket_date, ticket_time, qr_data, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", initial_tickets)
+
+    # Seed Default Users
+    cursor.execute("SELECT COUNT(*) FROM users")
+    if cursor.fetchone()[0] == 0:
+        initial_users = [
+            (
+                "admin",
+                "admin123",
+                "sahil2312056@akgec.ac.in",
+                "Sahil Gautam",
+                "admin",
+                "Operations Management",
+                "System Administrator",
+                "+91 98470 12345",
+                "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face",
+                datetime.now().isoformat()
+            ),
+            (
+                "customer",
+                "customer123",
+                "customer@kochimetro.org",
+                "Priya Commuter",
+                "customer",
+                "Passenger Services",
+                "Regular Passenger",
+                "+91 98470 98765",
+                "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face",
+                datetime.now().isoformat()
+            )
+        ]
+        cursor.executemany(
+            "INSERT INTO users (username, password, email, full_name, role, department, designation, phone, avatar, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            initial_users
+        )
 
     conn.commit()
 

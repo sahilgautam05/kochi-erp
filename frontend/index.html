@@ -260,6 +260,27 @@
       .demo-btn:hover {
         background: #e6f2ff;
       }
+      .auth-alert {
+        display: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 0.88rem;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .auth-alert.error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #f87171;
+      }
+      .auth-alert.success {
+        display: block;
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+      }
 
       /* ===== Animations & Media Queries ===== */
       @keyframes spin {
@@ -477,6 +498,9 @@
       <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle">Login</h2>
+        
+        <div id="authAlert" class="auth-alert"></div>
+
         <div class="tabs">
           <div class="tab active" onclick="switchTab('login')">Login</div>
           <div class="tab" onclick="switchTab('signup')">Sign Up</div>
@@ -486,7 +510,7 @@
           <input
             type="text"
             id="loginUsername"
-            placeholder="Username"
+            placeholder="Username or Email"
             required
           />
           <input
@@ -495,9 +519,11 @@
             placeholder="Password"
             required
           />
-          <button type="submit" class="submit-btn">Login</button>
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
           <button type="button" id="demoLoginBtn" class="submit-btn demo-btn">
-            Demo Login
+            <i class="fas fa-key"></i> Demo Login
           </button>
         </form>
 
@@ -554,6 +580,22 @@
     </div>
 
     <script>
+      function showAuthAlert(message, type = "error") {
+        const alertEl = document.getElementById("authAlert");
+        if (alertEl) {
+          alertEl.textContent = message;
+          alertEl.className = `auth-alert ${type}`;
+        }
+      }
+
+      function clearAuthAlert() {
+        const alertEl = document.getElementById("authAlert");
+        if (alertEl) {
+          alertEl.textContent = "";
+          alertEl.className = "auth-alert";
+        }
+      }
+
       function toggleDepartmentVisibility(role) {
         const deptFields = document.getElementById("adminDeptFields");
         if (deptFields) {
@@ -588,6 +630,7 @@
 
       function openModal(type) {
         currentLoginType = type;
+        clearAuthAlert();
         document.getElementById("loginModal").style.display = "flex";
         document.getElementById("modalTitle").textContent =
           type === "admin" ? "Admin Portal Access" : "Customer Portal Access";
@@ -605,7 +648,7 @@
           .querySelector('button[type="submit"]');
         if (loginButton) {
           loginButton.disabled = false;
-          loginButton.innerHTML = "Login";
+          loginButton.innerHTML = `<i class="fas fa-sign-in-alt"></i> Login`;
         }
 
         switchTab("login");
@@ -613,9 +656,11 @@
 
       function closeModal() {
         document.getElementById("loginModal").style.display = "none";
+        clearAuthAlert();
       }
 
       function switchTab(tab) {
+        clearAuthAlert();
         const loginForm = document.getElementById("loginForm");
         const signupForm = document.getElementById("signupForm");
         const tabs = document.querySelectorAll(".tab");
@@ -632,126 +677,165 @@
         }
       }
 
-      /* ==== Profile Sync & Auth Handlers ==== */
-      // ✅ Signup (Profile Creation)
+      /* ==== Database Authentication & Profile Sync Handlers ==== */
+      // ✅ Signup (Profile Creation in Database)
       document.getElementById("signupForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+        clearAuthAlert();
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalBtnHtml = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = `<div class="spinner"></div><span>Creating Profile...</span>`;
 
-        const fullName = document.getElementById("signupFullName")?.value?.trim() || "Sahil Gautam";
-        const email = document.getElementById("signupEmail")?.value?.trim() || "sahil2312056@akgec.ac.in";
-        const username = document.getElementById("signupUsername")?.value?.trim() || "admin";
+        const fullName = document.getElementById("signupFullName")?.value?.trim() || "";
+        const email = document.getElementById("signupEmail")?.value?.trim() || "";
+        const username = document.getElementById("signupUsername")?.value?.trim() || "";
         const password = document.getElementById("signupPassword")?.value || "";
         const role = document.getElementById("signupRole")?.value || "admin";
         const department = document.getElementById("signupDepartment")?.value || "Operations Management";
         const designation = document.getElementById("signupDesignation")?.value?.trim() || (role === "admin" ? "System Administrator" : "Commuter");
 
-        const userProfile = {
-          name: fullName,
-          username: username,
-          email: email,
-          role: role,
-          department: role === "admin" ? department : "Passenger Services",
-          designation: designation,
-          phone: "+91 98470 12345",
-          avatar: role === "admin" 
-            ? "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face"
-            : "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face",
-          updated_at: new Date().toISOString()
-        };
+        const avatar = role === "admin" 
+          ? "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face"
+          : "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face";
 
-        // Persist locally
-        localStorage.setItem("kmrl_current_user", JSON.stringify(userProfile));
-
-        // Sync with backend API
         try {
-          await fetch("/api/auth/signup", {
+          const res = await fetch("/api/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, role })
+            body: JSON.stringify({
+              username,
+              password,
+              email,
+              full_name: fullName,
+              role,
+              department,
+              designation,
+              phone: "+91 98470 12345",
+              avatar
+            })
           });
-          await fetch("/api/storage/kmrl_current_user", {
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            showAuthAlert(data.detail || "Registration failed. Please check inputs.", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+            return;
+          }
+
+          // Persist user profile locally
+          const userProfile = {
+            name: data.user.full_name || fullName,
+            username: data.user.username,
+            email: data.user.email,
+            role: data.user.role,
+            department: data.user.department,
+            designation: data.user.designation,
+            phone: data.user.phone || "+91 98470 12345",
+            avatar: data.user.avatar || avatar,
+            updated_at: new Date().toISOString()
+          };
+          localStorage.setItem("kmrl_current_user", JSON.stringify(userProfile));
+
+          // Sync with storage mirror
+          fetch("/api/storage/kmrl_current_user", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ value: userProfile })
-          });
-        } catch (err) {
-          console.warn("Backend auth sync notice:", err);
-        }
+          }).catch(() => {});
 
-        submitBtn.innerHTML = `<i class="fas fa-check"></i> Profile Created!`;
-        setTimeout(() => {
-          if (role === "admin") {
-            window.location.href = "dashboard.html";
-          } else {
-            window.location.href = "userpage.html";
-          }
-        }, 800);
+          showAuthAlert("Profile registered successfully in database! Redirecting...", "success");
+          submitBtn.innerHTML = `<i class="fas fa-check"></i> Success!`;
+          
+          setTimeout(() => {
+            window.location.href = data.redirect_url || (role === "admin" ? "dashboard.html" : "userpage.html");
+          }, 700);
+
+        } catch (err) {
+          console.error("Signup network error:", err);
+          showAuthAlert("Connection error to authentication server. Please try again.", "error");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
       });
 
-      // ✅ Login
+      // ✅ Login (Database Credential Verification)
       document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+        clearAuthAlert();
         const loginButton = e.target.querySelector('button[type="submit"]');
+        const originalBtnHtml = loginButton.innerHTML;
         loginButton.disabled = true;
-        loginButton.innerHTML = `<div class="spinner"></div><span>Logging In...</span>`;
+        loginButton.innerHTML = `<div class="spinner"></div><span>Authenticating...</span>`;
 
-        const username = document.getElementById("loginUsername")?.value?.trim() || "admin";
+        const username = document.getElementById("loginUsername")?.value?.trim() || "";
         const password = document.getElementById("loginPassword")?.value || "";
 
-        // Check or set user profile
-        let existingProfile = null;
         try {
-          const raw = localStorage.getItem("kmrl_current_user");
-          if (raw) existingProfile = JSON.parse(raw);
-        } catch (err) {}
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username,
+              password,
+              role: currentLoginType
+            })
+          });
 
-        if (!existingProfile || (currentLoginType === "admin" && existingProfile.role !== "admin")) {
-          existingProfile = {
-            name: username === "admin" ? "Sahil Gautam" : username,
-            username: username,
-            email: username === "admin" ? "sahil2312056@akgec.ac.in" : `${username}@kochimetro.org`,
-            role: currentLoginType,
-            department: currentLoginType === "admin" ? "Operations Management" : "Passenger Services",
-            designation: currentLoginType === "admin" ? "System Administrator" : "Commuter",
-            phone: "+91 98470 12345",
-            avatar: currentLoginType === "admin"
+          const data = await res.json();
+
+          if (!res.ok) {
+            // Authentication failed - User does not exist or invalid password
+            showAuthAlert(data.detail || "Authentication failed. User does not exist or wrong password.", "error");
+            loginButton.disabled = false;
+            loginButton.innerHTML = originalBtnHtml;
+            return;
+          }
+
+          // User successfully authenticated in database
+          const userProfile = {
+            name: data.user.full_name || data.user.username,
+            username: data.user.username,
+            email: data.user.email,
+            role: data.user.role,
+            department: data.user.department || (data.user.role === "admin" ? "Operations Management" : "Passenger Services"),
+            designation: data.user.designation || (data.user.role === "admin" ? "System Administrator" : "Commuter"),
+            phone: data.user.phone || "+91 98470 12345",
+            avatar: data.user.avatar || (data.user.role === "admin"
               ? "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face"
-              : "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face",
+              : "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face"),
             updated_at: new Date().toISOString()
           };
-          localStorage.setItem("kmrl_current_user", JSON.stringify(existingProfile));
-        }
 
-        try {
-          await fetch("/api/auth/login", {
+          localStorage.setItem("kmrl_current_user", JSON.stringify(userProfile));
+
+          // Sync storage mirror
+          fetch("/api/storage/kmrl_current_user", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, role: currentLoginType })
-          });
-          await fetch("/api/storage/kmrl_current_user", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ value: existingProfile })
-          });
+            body: JSON.stringify({ value: userProfile })
+          }).catch(() => {});
+
+          showAuthAlert("Authenticated successfully! Loading portal...", "success");
+          loginButton.innerHTML = `<i class="fas fa-check"></i> Verified!`;
+
+          setTimeout(() => {
+            window.location.href = data.redirect_url || (data.user.role === "admin" ? "dashboard.html" : "userpage.html");
+          }, 700);
+
         } catch (err) {
-          console.warn("Backend login sync notice:", err);
+          console.error("Login network error:", err);
+          showAuthAlert("Server connection error. Please ensure backend is running.", "error");
+          loginButton.disabled = false;
+          loginButton.innerHTML = originalBtnHtml;
         }
-
-        setTimeout(() => {
-          if (currentLoginType === "admin") {
-            window.location.href = "dashboard.html";
-          } else {
-            window.location.href = "userpage.html";
-          }
-        }, 800);
       });
 
       // ===== Demo Login Logic =====
       document.getElementById("demoLoginBtn").addEventListener("click", () => {
+        clearAuthAlert();
         const usernameInput = document.getElementById("loginUsername");
         const passwordInput = document.getElementById("loginPassword");
         const loginSubmitButton = document

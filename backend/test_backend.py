@@ -155,10 +155,45 @@ def run_tests():
     assert res.status_code == 200
     print(f"PASS: POST /api/predict/maintenance -> Days Remaining: {res.json()['daysRemaining']}")
 
-    # 12. Auth & Storage Sync
-    res = client.post("/api/auth/login", json={"username": "admin", "password": "password123", "role": "admin"})
+    # 12. Database Authentication & Profile Sync
+    # 12a. Valid Admin Login
+    res = client.post("/api/auth/login", json={"username": "admin", "password": "admin123", "role": "admin"})
     assert res.status_code == 200
-    print(f"PASS: POST /api/auth/login -> Role: {res.json()['role']}")
+    assert res.json()["role"] == "admin"
+    print(f"PASS: POST /api/auth/login -> Valid Admin authenticated ({res.json()['user']['full_name']})")
+
+    # 12b. Non-existent User Login -> Should reject with 404
+    res = client.post("/api/auth/login", json={"username": "non_existent_user_999", "password": "anypassword"})
+    assert res.status_code == 404
+    print(f"PASS: POST /api/auth/login (Non-existent user) -> Correctly rejected with 404 (User not found)")
+
+    # 12c. Invalid Password Login -> Should reject with 401
+    res = client.post("/api/auth/login", json={"username": "admin", "password": "wrong_password_xyz"})
+    assert res.status_code == 401
+    print(f"PASS: POST /api/auth/login (Wrong password) -> Correctly rejected with 401 (Incorrect password)")
+
+    # 12d. New User Signup & Registration
+    import time
+    test_user = f"newuser_{int(time.time())}"
+    res = client.post("/api/auth/signup", json={
+        "username": test_user,
+        "password": "securepass123",
+        "email": f"{test_user}@example.com",
+        "full_name": "Test Commuter",
+        "role": "customer"
+    })
+    assert res.status_code == 200
+    print(f"PASS: POST /api/auth/signup -> Created new user in database ({test_user})")
+
+    # 12e. Duplicate Signup -> Should reject with 409
+    res = client.post("/api/auth/signup", json={
+        "username": test_user,
+        "password": "securepass123",
+        "email": f"{test_user}@example.com",
+        "full_name": "Test Commuter"
+    })
+    assert res.status_code == 409
+    print(f"PASS: POST /api/auth/signup (Duplicate user) -> Correctly rejected with 409 (Conflict)")
 
     res = client.post("/api/storage/test_key", json={"value": "test_val"})
     assert res.status_code == 200
