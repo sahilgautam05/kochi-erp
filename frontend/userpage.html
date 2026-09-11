@@ -301,14 +301,17 @@
     <div class="header-controls">
       <!-- Updated Theme Toggle -->
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-icon" title="Switch to dark mode">🌙</button>
-      <div>👤 User</div>
+      <div id="user-header-badge" style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+        <img id="user-header-avatar" src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop&crop=face" alt="User Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.4);" />
+        <span id="user-header-name">Passenger</span>
+      </div>
     </div>
   </header>
 
   <main>
     <section class="welcome">
-      <h1>Welcome to Kochi Metro</h1>
-      <p>Your gateway to seamless urban transportation</p>
+      <h1 id="user-welcome-heading">Welcome to Kochi Metro</h1>
+      <p id="user-welcome-subheading">Your gateway to seamless urban transportation</p>
     </section>
 
     <!-- Info Boxes -->
@@ -473,8 +476,37 @@
       }
     }
 
+    function loadUserProfile() {
+      try {
+        const stored = localStorage.getItem("kmrl_current_user");
+        if (stored) {
+          const user = JSON.parse(stored);
+          const nameEl = document.getElementById("user-header-name");
+          const avatarEl = document.getElementById("user-header-avatar");
+          const welcomeHeading = document.getElementById("user-welcome-heading");
+          const welcomeSubheading = document.getElementById("user-welcome-subheading");
+
+          if (nameEl && (user.name || user.username)) {
+            nameEl.textContent = user.name || user.username;
+          }
+          if (avatarEl && user.avatar) {
+            avatarEl.src = user.avatar;
+          }
+          if (welcomeHeading && (user.name || user.username)) {
+            welcomeHeading.textContent = `Welcome, ${user.name || user.username}!`;
+          }
+          if (welcomeSubheading && user.role) {
+            welcomeSubheading.textContent = `Active Portal: ${user.role.toUpperCase()} | ${user.department || 'Passenger Services'}`;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load user profile:", err);
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       loadTheme();
+      loadUserProfile();
       startCountdown(5); // 5 minutes countdown
     });
   </script>

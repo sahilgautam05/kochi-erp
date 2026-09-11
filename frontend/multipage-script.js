@@ -62,6 +62,7 @@ function initializeApp() {
         initializeNavigation();
         initializeModals();
         initializeNotifications();
+        initializeUserProfile();
         initializeThemeToggle();
         initializeLiveMap();
         initializeTrainOperations();
@@ -441,6 +442,264 @@ function handleLogout() {
         setTimeout(() => {
         window.location.href = 'index.html';
         }, 1500);
+    }
+}
+
+// ===== USER PROFILE & MODAL FUNCTIONALITY =====
+const DEFAULT_USER_PROFILE = {
+    name: "Sahil Gautam",
+    username: "admin",
+    email: "sahil2312056@akgec.ac.in",
+    role: "admin",
+    department: "Operations Management",
+    designation: "System Administrator",
+    phone: "+91 98470 12345",
+    avatar: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face"
+};
+
+function getActiveUserProfile() {
+    try {
+        const stored = localStorage.getItem('kmrl_current_user');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed && typeof parsed === 'object') {
+                return Object.assign({}, DEFAULT_USER_PROFILE, parsed);
+            }
+        }
+    } catch (e) {
+        console.warn("Could not read stored user profile:", e);
+    }
+    return Object.assign({}, DEFAULT_USER_PROFILE);
+}
+
+function saveActiveUserProfile(profile) {
+    try {
+        localStorage.setItem('kmrl_current_user', JSON.stringify(profile));
+        fetch('/api/storage/kmrl_current_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: profile })
+        }).catch(err => console.warn('Storage sync notification:', err));
+    } catch (e) {
+        console.error('Error saving user profile:', e);
+    }
+}
+
+function renderUserProfile(profile) {
+    const user = profile || getActiveUserProfile();
+    
+    // Update name
+    const profileNameEls = document.querySelectorAll('.profile-name');
+    profileNameEls.forEach(el => {
+        el.textContent = user.name || user.username || 'Admin User';
+        el.style.display = 'inline';
+    });
+
+    // Update dropdown header details
+    const profileDetailH4s = document.querySelectorAll('.profile-details h4');
+    profileDetailH4s.forEach(el => {
+        el.textContent = user.name || user.username || 'Admin User';
+    });
+
+    const profileDetailPs = document.querySelectorAll('.profile-details p');
+    profileDetailPs.forEach(el => {
+        el.textContent = user.designation || (user.role === 'admin' ? 'System Administrator' : 'Passenger');
+    });
+
+    // Update avatar images
+    const avatars = document.querySelectorAll('.profile-avatar, .profile-avatar-large');
+    avatars.forEach(img => {
+        if (user.avatar) {
+            img.src = user.avatar;
+        }
+    });
+
+    // If there's a welcome header on customer/admin pages
+    const welcomeHeading = document.getElementById('user-welcome-heading');
+    if (welcomeHeading) {
+        welcomeHeading.textContent = `Welcome, ${user.name || user.username}`;
+    }
+}
+
+function initializeUserProfile() {
+    const profile = getActiveUserProfile();
+    renderUserProfile(profile);
+    initializeProfileModal();
+}
+
+function initializeProfileModal() {
+    // Check if modal already exists in DOM; if not, inject it
+    let modal = document.getElementById('profile-settings-modal');
+    if (!modal) {
+        const modalHtml = `
+        <div id="profile-settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="profile-modal-title">
+            <div class="modal-dialog" style="max-width: 520px; width: 92%; margin: 30px auto; background: var(--bg-card, #ffffff); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid var(--border-color, #e2e8f0); color: var(--text-primary, #1e293b); animation: fadeIn 0.3s ease;">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid var(--border-color, #e2e8f0); background: var(--bg-secondary, #f8fafc);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <div>
+                            <h3 id="profile-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 700;">Admin Profile Settings</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary, #64748b);">Manage account credentials & system profile</p>
+                        </div>
+                    </div>
+                    <button type="button" id="profile-settings-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary, #64748b); padding: 4px 8px; border-radius: 6px;">&times;</button>
+                </div>
+                <form id="profile-settings-form" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <!-- Avatar Section -->
+                    <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: var(--bg-secondary, #f8fafc); border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+                        <img id="profile-modal-avatar-preview" src="${DEFAULT_USER_PROFILE.avatar}" alt="Avatar Preview" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #2563eb; flex-shrink: 0;" />
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Profile Avatar URL</label>
+                            <input type="url" id="profile-modal-avatar-input" placeholder="https://..." style="width: 100%; box-sizing: border-box; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.82rem; background: var(--bg-card, #fff); color: inherit;" />
+                            <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                                <button type="button" class="avatar-preset-btn" data-url="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: var(--bg-card, #fff); cursor: pointer; color: inherit;">Avatar 1</button>
+                                <button type="button" class="avatar-preset-btn" data-url="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: var(--bg-card, #fff); cursor: pointer; color: inherit;">Avatar 2</button>
+                                <button type="button" class="avatar-preset-btn" data-url="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=96&h=96&fit=crop&crop=face" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: var(--bg-card, #fff); cursor: pointer; color: inherit;">Avatar 3</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Full Name *</label>
+                            <input type="text" id="profile-modal-name" required style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Username</label>
+                            <input type="text" id="profile-modal-username" readonly style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-secondary, #f1f5f9); color: var(--text-secondary, #64748b); cursor: not-allowed;" />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Email Address *</label>
+                            <input type="email" id="profile-modal-email" required style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Phone Number</label>
+                            <input type="tel" id="profile-modal-phone" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                        </div>
+                    </div>
+
+                    <!-- Role & Department -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Department</label>
+                            <select id="profile-modal-department" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;">
+                                <option value="Operations Management">Operations Management</option>
+                                <option value="Signaling & Telecom">Signaling & Telecom</option>
+                                <option value="Rolling Stock & Fleet">Rolling Stock & Fleet</option>
+                                <option value="Finance & Accounts">Finance & Accounts</option>
+                                <option value="Safety & Verification">Safety & Verification</option>
+                                <option value="IT & Infrastructure">IT & Infrastructure</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Designation</label>
+                            <input type="text" id="profile-modal-designation" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border-color, #e2e8f0);">
+                        <button type="button" id="profile-modal-cancel" style="padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: transparent; color: inherit; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button type="submit" style="padding: 10px 22px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('profile-settings-modal');
+    }
+
+    // Bind Avatar Preset buttons
+    const presetBtns = modal.querySelectorAll('.avatar-preset-btn');
+    const avatarInput = document.getElementById('profile-modal-avatar-input');
+    const avatarPreview = document.getElementById('profile-modal-avatar-preview');
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const url = btn.getAttribute('data-url');
+            if (avatarInput) avatarInput.value = url;
+            if (avatarPreview) avatarPreview.src = url;
+        });
+    });
+
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('input', () => {
+            if (avatarInput.value.trim()) {
+                avatarPreview.src = avatarInput.value.trim();
+            }
+        });
+    }
+
+    // Open profile modal buttons
+    const profileSettingsBtns = document.querySelectorAll('#profile-settings, #mobile-profile-settings, .open-profile-settings');
+    profileSettingsBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Populate form with current user details
+            const user = getActiveUserProfile();
+            const nameIn = document.getElementById('profile-modal-name');
+            const userIn = document.getElementById('profile-modal-username');
+            const emailIn = document.getElementById('profile-modal-email');
+            const phoneIn = document.getElementById('profile-modal-phone');
+            const deptIn = document.getElementById('profile-modal-department');
+            const desigIn = document.getElementById('profile-modal-designation');
+            const avIn = document.getElementById('profile-modal-avatar-input');
+            const avPrev = document.getElementById('profile-modal-avatar-preview');
+
+            if (nameIn) nameIn.value = user.name || '';
+            if (userIn) userIn.value = user.username || 'admin';
+            if (emailIn) emailIn.value = user.email || '';
+            if (phoneIn) phoneIn.value = user.phone || '+91 98470 12345';
+            if (deptIn) deptIn.value = user.department || 'Operations Management';
+            if (desigIn) desigIn.value = user.designation || 'System Administrator';
+            if (avIn) avIn.value = user.avatar || '';
+            if (avPrev) avPrev.src = user.avatar || DEFAULT_USER_PROFILE.avatar;
+
+            // Close profile dropdown if open
+            const profileDropdown = document.getElementById('profile-dropdown');
+            if (profileDropdown) profileDropdown.classList.remove('show');
+
+            showModal('profile-settings-modal');
+        });
+    });
+
+    // Close buttons
+    const closeBtn = document.getElementById('profile-settings-close');
+    const cancelBtn = document.getElementById('profile-modal-cancel');
+    if (closeBtn) closeBtn.addEventListener('click', () => hideModal('profile-settings-modal'));
+    if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal('profile-settings-modal'));
+
+    // Handle Form Submit
+    const form = document.getElementById('profile-settings-form');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const currentUser = getActiveUserProfile();
+            const updatedUser = Object.assign({}, currentUser, {
+                name: document.getElementById('profile-modal-name')?.value?.trim() || currentUser.name,
+                email: document.getElementById('profile-modal-email')?.value?.trim() || currentUser.email,
+                phone: document.getElementById('profile-modal-phone')?.value?.trim() || currentUser.phone,
+                department: document.getElementById('profile-modal-department')?.value || currentUser.department,
+                designation: document.getElementById('profile-modal-designation')?.value?.trim() || currentUser.designation,
+                avatar: document.getElementById('profile-modal-avatar-input')?.value?.trim() || currentUser.avatar,
+                updated_at: new Date().toISOString()
+            });
+
+            saveActiveUserProfile(updatedUser);
+            renderUserProfile(updatedUser);
+            hideModal('profile-settings-modal');
+            showSuccessMessage('Admin profile updated successfully!');
+        });
     }
 }
 
