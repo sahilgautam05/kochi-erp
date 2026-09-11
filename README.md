@@ -14,6 +14,9 @@ An enterprise-grade web platform and operations management ERP developed for **K
 ## 🌟 Key Features & Modules
 
 - 🌐 **Live Production Deployment**: Hosted on Vercel with serverless backend APIs at [https://kochi-erp-62tz.vercel.app/](https://kochi-erp-62tz.vercel.app/).
+- 🔐 **Database Authentication & Role Authorization**: SQLite-backed user database with verified login, unique registration conflict checks, password hashing/verification, and error validation alerts.
+- 👤 **Admin & User Profile Management**: Dynamic user profile synchronization, live DOM reflection across all pages, avatar selection, and interactive Profile Settings modal.
+- 🔑 **Password Change System**: Interactive Change Password modal with current password verification, length checks, and direct database updates.
 - 📊 **Executive Dashboard**: High-level KPIs, real-time ridership analytics, and operational compliance.
 - 🚇 **Train Fleet Operations**: Live rake tracking, fitness verification, job cards, bay assignments, and status filtering.
 - 🗺️ **Live Station & Route Map**: Real-time Leaflet map tracking train movement across all 25 stations from Aluva to Tripunithura.
