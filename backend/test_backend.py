@@ -195,6 +195,25 @@ def run_tests():
     assert res.status_code == 409
     print(f"PASS: POST /api/auth/signup (Duplicate user) -> Correctly rejected with 409 (Conflict)")
 
+    # 12f. Change Password (Success)
+    res = client.post("/api/auth/change-password", json={
+        "username": test_user,
+        "current_password": "securepass123",
+        "new_password": "new_strong_pass_456",
+        "confirm_password": "new_strong_pass_456"
+    })
+    assert res.status_code == 200
+    print(f"PASS: POST /api/auth/change-password -> Password updated in database for {test_user}")
+
+    # 12g. Change Password (Wrong current password rejection)
+    res = client.post("/api/auth/change-password", json={
+        "username": test_user,
+        "current_password": "wrong_old_password",
+        "new_password": "another_pass_789"
+    })
+    assert res.status_code == 401
+    print(f"PASS: POST /api/auth/change-password (Wrong current password) -> Correctly rejected with 401")
+
     res = client.post("/api/storage/test_key", json={"value": "test_val"})
     assert res.status_code == 200
     res = client.get("/api/storage/test_key")

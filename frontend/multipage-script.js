@@ -525,6 +525,7 @@ function initializeUserProfile() {
     const profile = getActiveUserProfile();
     renderUserProfile(profile);
     initializeProfileModal();
+    initializePasswordModal();
 }
 
 function initializeProfileModal() {
@@ -603,6 +604,14 @@ function initializeProfileModal() {
                         </div>
                     </div>
 
+                    <!-- Change Password Shortcut inside Profile Modal -->
+                    <div style="padding-top: 6px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color, #e2e8f0);">
+                        <span style="font-size: 0.82rem; color: var(--text-secondary, #64748b);">Account Security</span>
+                        <button type="button" id="open-pwd-from-profile" style="background: none; border: none; color: #2563eb; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </div>
+
                     <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border-color, #e2e8f0);">
                         <button type="button" id="profile-modal-cancel" style="padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: transparent; color: inherit; font-weight: 600; cursor: pointer;">Cancel</button>
                         <button type="submit" style="padding: 10px 22px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
@@ -673,6 +682,15 @@ function initializeProfileModal() {
         });
     });
 
+    // Shortcut button from profile modal to password modal
+    const openPwdBtn = document.getElementById('open-pwd-from-profile');
+    if (openPwdBtn) {
+        openPwdBtn.addEventListener('click', () => {
+            hideModal('profile-settings-modal');
+            openChangePasswordModal();
+        });
+    }
+
     // Close buttons
     const closeBtn = document.getElementById('profile-settings-close');
     const cancelBtn = document.getElementById('profile-modal-cancel');
@@ -699,6 +717,185 @@ function initializeProfileModal() {
             renderUserProfile(updatedUser);
             hideModal('profile-settings-modal');
             showSuccessMessage('Admin profile updated successfully!');
+        });
+    }
+}
+
+// ===== PASSWORD MANAGEMENT MODAL =====
+function openChangePasswordModal() {
+    const modal = document.getElementById('change-password-modal');
+    if (modal) {
+        // Reset inputs
+        const currIn = document.getElementById('pwd-modal-current');
+        const newIn = document.getElementById('pwd-modal-new');
+        const confIn = document.getElementById('pwd-modal-confirm');
+        const alertEl = document.getElementById('pwd-modal-alert');
+        if (currIn) currIn.value = '';
+        if (newIn) newIn.value = '';
+        if (confIn) confIn.value = '';
+        if (alertEl) {
+            alertEl.textContent = '';
+            alertEl.style.display = 'none';
+        }
+        
+        // Close profile dropdown
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileDropdown) profileDropdown.classList.remove('show');
+
+        showModal('change-password-modal');
+    }
+}
+
+function initializePasswordModal() {
+    let modal = document.getElementById('change-password-modal');
+    if (!modal) {
+        const modalHtml = `
+        <div id="change-password-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="pwd-modal-title">
+            <div class="modal-dialog" style="max-width: 440px; width: 92%; margin: 40px auto; background: var(--bg-card, #ffffff); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid var(--border-color, #e2e8f0); color: var(--text-primary, #1e293b); animation: fadeIn 0.3s ease;">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid var(--border-color, #e2e8f0); background: var(--bg-secondary, #f8fafc);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div>
+                            <h3 id="pwd-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 700;">Change Password</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary, #64748b);">Update your account login password</p>
+                        </div>
+                    </div>
+                    <button type="button" id="pwd-modal-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary, #64748b); padding: 4px 8px; border-radius: 6px;">&times;</button>
+                </div>
+                <form id="change-password-form" style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+                    <div id="pwd-modal-alert" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; line-height: 1.4;"></div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Current Password *</label>
+                        <input type="password" id="pwd-modal-current" required placeholder="Enter current password" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">New Password *</label>
+                        <input type="password" id="pwd-modal-new" required minlength="4" placeholder="Enter new password (min 4 chars)" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Confirm New Password *</label>
+                        <input type="password" id="pwd-modal-confirm" required minlength="4" placeholder="Re-enter new password" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color, #cbd5e1); font-size: 0.88rem; background: var(--bg-card, #fff); color: inherit;" />
+                    </div>
+
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--border-color, #e2e8f0);">
+                        <button type="button" id="pwd-modal-cancel" style="padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: transparent; color: inherit; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button type="submit" id="pwd-modal-submit" style="padding: 10px 22px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-key"></i> Update Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('change-password-modal');
+    }
+
+    // Attach listeners to all change password buttons across the page
+    const changePwdBtns = document.querySelectorAll('#change-password, #mobile-change-password, .open-change-password');
+    changePwdBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openChangePasswordModal();
+        });
+    });
+
+    // Close handlers
+    const closeBtn = document.getElementById('pwd-modal-close');
+    const cancelBtn = document.getElementById('pwd-modal-cancel');
+    if (closeBtn) closeBtn.addEventListener('click', () => hideModal('change-password-modal'));
+    if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal('change-password-modal'));
+
+    // Form submit handler
+    const form = document.getElementById('change-password-form');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertEl = document.getElementById('pwd-modal-alert');
+            const submitBtn = document.getElementById('pwd-modal-submit');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            const currentPassword = document.getElementById('pwd-modal-current')?.value || '';
+            const newPassword = document.getElementById('pwd-modal-new')?.value || '';
+            const confirmPassword = document.getElementById('pwd-modal-confirm')?.value || '';
+
+            if (newPassword !== confirmPassword) {
+                if (alertEl) {
+                    alertEl.textContent = 'New passwords do not match. Please verify!';
+                    alertEl.style.display = 'block';
+                    alertEl.style.background = '#fee2e2';
+                    alertEl.style.color = '#991b1b';
+                    alertEl.style.border = '1px solid #f87171';
+                }
+                return;
+            }
+
+            const user = getActiveUserProfile();
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<div class="spinner" style="width:16px; height:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></div> Updating...`;
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: user.username || 'admin',
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    if (alertEl) {
+                        alertEl.textContent = data.detail || 'Password update failed. Please check your current password.';
+                        alertEl.style.display = 'block';
+                        alertEl.style.background = '#fee2e2';
+                        alertEl.style.color = '#991b1b';
+                        alertEl.style.border = '1px solid #f87171';
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    return;
+                }
+
+                // Success
+                if (alertEl) {
+                    alertEl.textContent = 'Password updated successfully in database!';
+                    alertEl.style.display = 'block';
+                    alertEl.style.background = '#dcfce7';
+                    alertEl.style.color = '#166534';
+                    alertEl.style.border = '1px solid #86efac';
+                }
+                submitBtn.innerHTML = `<i class="fas fa-check"></i> Updated!`;
+
+                setTimeout(() => {
+                    hideModal('change-password-modal');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    showSuccessMessage('Password changed successfully!');
+                }, 800);
+
+            } catch (err) {
+                console.error('Password change error:', err);
+                if (alertEl) {
+                    alertEl.textContent = 'Network or server error while updating password.';
+                    alertEl.style.display = 'block';
+                    alertEl.style.background = '#fee2e2';
+                    alertEl.style.color = '#991b1b';
+                    alertEl.style.border = '1px solid #f87171';
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
         });
     }
 }

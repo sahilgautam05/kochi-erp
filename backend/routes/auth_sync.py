@@ -114,6 +114,42 @@ def get_user_profile(username: str):
         raise HTTPException(status_code=404, detail=f"User '{username}' not found")
     return dict(user)
 
+@router.post("/auth/change-password")
+def change_password(payload: dict):
+    """Change user password after verifying current password in database."""
+    username = (payload.get("username") or "").strip()
+    current_password = payload.get("current_password", "")
+    new_password = payload.get("new_password", "")
+    confirm_password = payload.get("confirm_password", "")
+
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Both current password and new password are required")
+    if len(new_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters long")
+    if confirm_password and new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="New password and confirmation do not match")
+
+    conn = get_db_connection()
+    user = conn.execute("SELECT * FROM users WHERE LOWER(username) = ?", (username.lower(),)).fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"User '{username}' does not exist in database")
+
+    if user["password"] != current_password:
+        conn.close()
+        raise HTTPException(status_code=401, detail="Current password entered is incorrect!")
+
+    conn.execute("UPDATE users SET password = ? WHERE LOWER(username) = ?", (new_password, username.lower()))
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": "success",
+        "message": f"Password for '{username}' updated successfully in database."
+    }
+
 @router.get("/verification")
 def list_verification_tasks():
     """List operational verification tasks."""
