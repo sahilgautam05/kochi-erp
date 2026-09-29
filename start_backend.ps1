@@ -30,7 +30,24 @@ if (-not $pythonExe) {
 }
 
 Write-Host "Using Python: $pythonExe" -ForegroundColor Green
+
+# Free port 8000 if occupied
+try {
+    $processes = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+    if ($processes) {
+        foreach ($proc in $processes) {
+            Stop-Process -Id $proc.OwningProcess -Force -ErrorAction SilentlyContinue
+            Write-Host "Freed port 8000 from PID $($proc.OwningProcess)" -ForegroundColor Yellow
+        }
+    }
+} catch {}
+
 $backendDir = Join-Path $PSScriptRoot "backend"
 Set-Location $backendDir
 
-& $pythonExe -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+while ($true) {
+    Write-Host "`n[INFO] Starting Uvicorn on http://127.0.0.1:8000..." -ForegroundColor Cyan
+    & $pythonExe -m uvicorn main:app --host 0.0.0.0 --port 8000
+    Write-Host "`n[WARNING] Server stopped. Auto-restarting in 3 seconds... (Press Ctrl+C to stop)" -ForegroundColor Yellow
+    Start-Sleep -Seconds 3
+}
