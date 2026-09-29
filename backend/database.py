@@ -1,10 +1,22 @@
 import sqlite3
 import os
+import shutil
 import json
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "metro_erp.db")
+
+# In serverless environments (e.g. Vercel, AWS Lambda), filesystems are read-only except /tmp
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    DB_PATH = os.path.join("/tmp", "metro_erp.db")
+    source_db = os.path.join(BASE_DIR, "metro_erp.db")
+    if not os.path.exists(DB_PATH) and os.path.exists(source_db):
+        try:
+            shutil.copyfile(source_db, DB_PATH)
+        except Exception as e:
+            print("Notice: could not copy pre-seeded db to /tmp:", e)
+else:
+    DB_PATH = os.path.join(BASE_DIR, "metro_erp.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
