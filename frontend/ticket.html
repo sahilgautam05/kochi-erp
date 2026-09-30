@@ -708,22 +708,51 @@
             </div>
 
             <div class="merchant-name">SAHIL GAUTAM</div>
-            <div style="font-size: 0.78rem; color: #94a3b8;">UPI ID: <b>sahil2312056@akgec.ac.in</b></div>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;">
+              <span style="font-size: 0.82rem; color: #cbd5e1; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px;">
+                UPI ID: <b id="upiIdText">sahil2312056@akgec.ac.in</b>
+              </span>
+              <button onclick="copyUpiId()" class="btn btn-ghost" style="width: auto; padding: 4px 8px; font-size: 0.72rem; color: #fff; background: rgba(255,255,255,0.2); border: none;" id="copyUpiBtn">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
 
             <div class="upi-apps-row">
-              <span class="upi-chip"><i class="fas fa-bolt"></i> Instant Settlement</span>
+              <span class="upi-chip"><i class="fas fa-satellite-dish fa-spin"></i> Auto-Detecting Payment</span>
               <span class="upi-chip">0% Surcharge</span>
               <span class="upi-chip">256-Bit Encrypted</span>
             </div>
           </div>
 
+          <!-- Quick UPI App Triggers -->
+          <div style="margin-bottom: 12px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">
+              <i class="fas fa-mobile-alt"></i> Quick Pay via UPI Apps
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <button class="btn btn-phonepe" style="padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('phonepe')">
+                <i class="fas fa-bolt"></i> PhonePe
+              </button>
+              <button class="btn" style="background: #1a73e8; color: #fff; padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('gpay')">
+                <i class="fab fa-google"></i> GPay
+              </button>
+              <button class="btn" style="background: #00b9f5; color: #fff; padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('paytm')">
+                <i class="fas fa-wallet"></i> Paytm
+              </button>
+            </div>
+          </div>
+
           <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
-            <button class="btn btn-phonepe" onclick="openUpiAppDeepLink()">
-              <i class="fas fa-mobile-alt"></i> Pay via UPI App (Mobile)
-            </button>
             <button class="btn btn-primary" onclick="confirmUpiPayment()">
               <i class="fas fa-check-circle"></i> I Have Paid via UPI • Verify & Issue Ticket
             </button>
+          </div>
+
+          <!-- Live Banking Listener Alert -->
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <span class="spinner" style="border-top-color: #16a34a; border-color: rgba(22, 163, 74, 0.2); width: 14px; height: 14px;"></span>
+            <span><b>System Active:</b> Monitoring incoming UPI credits. Ticket will be issued automatically once transfer is completed.</span>
           </div>
         </div>
 
@@ -1147,6 +1176,62 @@
         if (m) m.classList.add("hidden");
       }
 
+      let paymentPollInterval = null;
+
+      // Copy UPI ID to Clipboard
+      function copyUpiId() {
+        const upiId = "sahil2312056@akgec.ac.in";
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(upiId).then(() => {
+            const btn = document.getElementById("copyUpiBtn");
+            if (btn) {
+              btn.innerHTML = `<i class="fas fa-check"></i> Copied!`;
+              btn.style.background = "#10b981";
+              setTimeout(() => {
+                btn.innerHTML = `<i class="fas fa-copy"></i> Copy`;
+                btn.style.background = "rgba(255,255,255,0.2)";
+              }, 2000);
+            }
+          });
+        } else {
+          alert("UPI ID: " + upiId);
+        }
+      }
+
+      // Launch UPI Apps with Deep-links & Desktop fallback
+      function launchUpiIntent(app) {
+        const data = getCalculatedData();
+        const amt = data.totalFare.toFixed(2);
+        const pa = "sahil2312056@akgec.ac.in";
+        const pn = encodeURIComponent("SAHIL GAUTAM");
+        const tn = encodeURIComponent("Kochi Metro Ticket");
+        const tr = activeSessionId || `PAY-KMRL-${Date.now().toString().slice(-8)}`;
+
+        let intentUrl = `upi://pay?pa=${pa}&pn=${pn}&am=${amt}&cu=INR&tn=${tn}&tr=${tr}`;
+        if (app === "phonepe") {
+          intentUrl = `phonepe://pay?pa=${pa}&pn=${pn}&am=${amt}&cu=INR&tn=${tn}&tr=${tr}`;
+        } else if (app === "gpay") {
+          intentUrl = `tez://upi/pay?pa=${pa}&pn=${pn}&am=${amt}&cu=INR&tn=${tn}&tr=${tr}`;
+        } else if (app === "paytm") {
+          intentUrl = `paytmmp://pay?pa=${pa}&pn=${pn}&am=${amt}&cu=INR&tn=${tn}&tr=${tr}`;
+        }
+
+        // Attempt launching application via hidden link
+        const a = document.createElement("a");
+        a.href = intentUrl;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Fallback for desktop / web browsers:
+        // Trigger verification dialog & process payment
+        setTimeout(() => {
+          if (confirm(`Attempted opening ${app ? app.toUpperCase() : "UPI App"} for ₹${amt} to SAHIL GAUTAM.\n\nClick OK once payment is done to verify and receive your e-Ticket immediately.`)) {
+            processPaymentTransaction(`${app ? app.toUpperCase() : "PhonePe"} UPI QuickPay`, `UPI_${Math.floor(100000000000 + Math.random() * 900000000000)}`);
+          }
+        }, 1000);
+      }
+
       // Step 2 -> Step 3 (Payment Gateway)
       document.getElementById("proceedToPayBtn").addEventListener("click", async () => {
         const email = emailInput.value.trim();
@@ -1200,6 +1285,9 @@
 
           // Start 5-minute countdown timer
           startCountdown(300);
+
+          // Start Autonomous Background Verification Polling
+          startPaymentPolling(activeSessionId, data, email, phone);
         } catch (err) {
           console.error("Payment session initialization notice:", err);
           activeSessionId = `PAY-KMRL-${Date.now().toString().slice(-8)}`;
@@ -1207,21 +1295,57 @@
           paymentGateway.classList.remove("hidden");
           updateStepIndicators(3);
           startCountdown(300);
+          startPaymentPolling(activeSessionId, data, email, phone);
         } finally {
           proceedBtn.disabled = false;
           proceedBtn.innerHTML = originalBtnText;
         }
       });
 
-      // 1. UPI Payment Handler
-      function openUpiAppDeepLink() {
-        const data = getCalculatedData();
-        const upiUrl = `upi://pay?pa=sahil2312056@akgec.ac.in&pn=SAHIL%20GAUTAM&am=${data.totalFare.toFixed(2)}&cu=INR&tn=Kochi%20Metro%20Ticket`;
-        window.location.href = upiUrl;
+      // Autonomous Background Polling Loop
+      function startPaymentPolling(sessionId, routeData, email, phone) {
+        if (paymentPollInterval) clearInterval(paymentPollInterval);
+
+        paymentPollInterval = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/tickets/payment-session/status/${sessionId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            if (data.status === "COMPLETED") {
+              clearInterval(paymentPollInterval);
+              clearInterval(timerInterval);
+              
+              // Transition from Receipt to e-Ticket Pass
+              const ticketData = data.ticket || routeData;
+              const refId = data.reference_id || `UPI${Math.floor(10000000 + Math.random() * 90000000)}`;
+              
+              // Show Success Modal briefly
+              document.getElementById("receiptAmount").textContent = `₹${(ticketData.fare || routeData.totalFare).toFixed(2)}`;
+              document.getElementById("receiptRef").textContent = refId;
+              document.getElementById("receiptMethod").textContent = ticketData.payment || "PhonePe UPI";
+
+              const successModal = document.getElementById("pgSuccessModal");
+              if (successModal) successModal.classList.remove("hidden");
+
+              renderConfirmedTicket(ticketData, sessionId, refId, ticketData.payment || "PhonePe UPI", email);
+
+              setTimeout(() => {
+                if (successModal) successModal.classList.add("hidden");
+                paymentGateway.classList.add("hidden");
+                ticketAside.classList.remove("hidden");
+                updateStepIndicators(4);
+              }, 1800);
+            }
+          } catch (err) {
+            console.warn("Polling status notice:", err);
+          }
+        }, 2000);
       }
 
+      // 1. UPI Payment Handler
       function confirmUpiPayment() {
-        processPaymentTransaction("PhonePe UPI", `UPI${Math.floor(100000000000 + Math.random() * 900000000000)}`);
+        processPaymentTransaction("PhonePe UPI QuickPay", `UPI${Math.floor(100000000000 + Math.random() * 900000000000)}`);
       }
 
       // 2. Card Payment Handler
@@ -1276,6 +1400,7 @@
 
       // UNIFIED PAYMENT PROCESSING & BACKEND VERIFICATION PIPELINE
       async function processPaymentTransaction(method, refId) {
+        if (paymentPollInterval) clearInterval(paymentPollInterval);
         clearInterval(timerInterval);
         const data = getCalculatedData();
         const email = emailInput.value.trim();
@@ -1424,6 +1549,7 @@
 
       // Cancel Payment -> Back to Details
       document.getElementById("cancelPaymentBtn").addEventListener("click", () => {
+        if (paymentPollInterval) clearInterval(paymentPollInterval);
         clearInterval(timerInterval);
         if (activeSessionId) {
           fetch(`/api/tickets/payment-session/cancel/${activeSessionId}`, { method: "POST" }).catch(() => {});
@@ -1445,6 +1571,7 @@
 
           if (--timer < 0) {
             clearInterval(timerInterval);
+            if (paymentPollInterval) clearInterval(paymentPollInterval);
             alert("Payment session timed out. Please try again.");
             paymentGateway.classList.add("hidden");
             bookingForm.classList.remove("hidden");
