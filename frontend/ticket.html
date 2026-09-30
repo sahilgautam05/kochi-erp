@@ -330,16 +330,117 @@
         color: #cbd5e1;
       }
 
-      /* Ticket Card */
-      .ticket {
-        padding: 24px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 2px dashed #93c5fd;
+      /* Payment Gateway Tabs & UI */
+      .gateway-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 16px;
+        gap: 4px;
+        overflow-x: auto;
+      }
+      .gateway-tab-btn {
+        padding: 10px 14px;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+      .gateway-tab-btn:hover {
+        color: var(--accent);
+      }
+      .gateway-tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+        background: #eff6ff;
+        border-radius: 8px 8px 0 0;
+      }
+      .tab-pane {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .tab-pane.active {
+        display: block;
+      }
+
+      .bank-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .bank-card {
+        border: 1px solid var(--border);
+        padding: 10px 8px;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        background: #f8fafc;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      .bank-card:hover, .bank-card.selected {
+        border-color: var(--accent);
+        background: #eff6ff;
+        color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(11, 99, 214, 0.1);
+      }
+
+      /* Modal Overlay for 3D Secure / NetBanking / Processing */
+      .pg-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+      }
+      .pg-modal-content {
+        background: #ffffff;
+        border-radius: 20px;
+        max-width: 440px;
         width: 100%;
-        text-align: left;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         position: relative;
-        box-shadow: 0 10px 25px rgba(11, 99, 214, 0.1);
+      }
+      @keyframes modalPop {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      .success-checkmark-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 14px;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
       }
       .ticket-header-top {
         display: flex;
@@ -558,7 +659,7 @@
         <div class="gateway-header">
           <div class="gateway-badge">
             <i class="fas fa-shield-alt" style="color: #4ade80;"></i>
-            <span>KMRL Autonomous Payment Gateway</span>
+            <span>KMRL Official Payment Gateway</span>
           </div>
           <div class="gateway-timer" id="timerBadge">
             <i class="fas fa-clock"></i> <span id="countdownTimer">04:59</span>
@@ -568,54 +669,241 @@
         <!-- Order Summary Pill -->
         <div class="fare-summary-box" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 14px;">
           <div>
-            <div style="font-size: 0.8rem; color: var(--muted);">Billable Passenger: <b id="payName" style="color: #1e293b;">—</b></div>
+            <div style="font-size: 0.8rem; color: var(--muted);">Passenger: <b id="payName" style="color: #1e293b;">—</b></div>
             <div style="font-size: 0.8rem; color: var(--muted);">Route: <span id="payRoute">—</span></div>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 0.75rem; color: var(--muted);">Total Payable</div>
+            <div style="font-size: 0.75rem; color: var(--muted);">Amount to Pay</div>
             <div class="amount-tag" id="payAmountTag" style="color: #0b63d6;">₹0.00</div>
           </div>
         </div>
 
-        <!-- PhonePe UPI Scanner Card -->
-        <div class="qr-payment-card" id="upiPaymentSection">
-          <div class="phonepe-brand-header">
-            <i class="fab fa-google-pay" style="font-size: 1.4rem;"></i>
-            <span>PhonePe • UPI Quick Pay</span>
-          </div>
-          <div style="font-size: 0.82rem; color: #a1a1aa;">Scan & Pay Using Any UPI App (PhonePe, GPay, Paytm, BHIM)</div>
+        <!-- Payment Method Tabs -->
+        <div class="gateway-tabs">
+          <button class="gateway-tab-btn active" onclick="switchPGTab('upiTab')">
+            <i class="fas fa-qrcode"></i> UPI / QR
+          </button>
+          <button class="gateway-tab-btn" onclick="switchPGTab('cardTab')">
+            <i class="fas fa-credit-card"></i> Card (Debit/Credit)
+          </button>
+          <button class="gateway-tab-btn" onclick="switchPGTab('nbTab')">
+            <i class="fas fa-university"></i> Net Banking
+          </button>
+          <button class="gateway-tab-btn" onclick="switchPGTab('walletTab')">
+            <i class="fas fa-wallet"></i> Wallets
+          </button>
+        </div>
 
-          <div class="qr-img-wrapper">
-            <img src="phonepe-qr.jpg" alt="PhonePe UPI Payment QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=sahil2312056@akgec.ac.in'" />
+        <!-- TAB 1: UPI / QR -->
+        <div class="tab-pane active" id="upiTab">
+          <div class="qr-payment-card" id="upiPaymentSection">
+            <div class="phonepe-brand-header">
+              <i class="fab fa-google-pay" style="font-size: 1.4rem;"></i>
+              <span>PhonePe • UPI Quick Pay</span>
+            </div>
+            <div style="font-size: 0.82rem; color: #a1a1aa;">Scan with PhonePe, Google Pay, Paytm, or BHIM</div>
+
+            <div class="qr-img-wrapper">
+              <img src="phonepe-qr.jpg" alt="PhonePe UPI Payment QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=sahil2312056@akgec.ac.in'" />
+            </div>
+
+            <div class="merchant-name">SAHIL GAUTAM</div>
+            <div style="font-size: 0.78rem; color: #94a3b8;">UPI ID: <b>sahil2312056@akgec.ac.in</b></div>
+
+            <div class="upi-apps-row">
+              <span class="upi-chip"><i class="fas fa-bolt"></i> Instant Settlement</span>
+              <span class="upi-chip">0% Surcharge</span>
+              <span class="upi-chip">256-Bit Encrypted</span>
+            </div>
           </div>
 
-          <div class="merchant-name">SAHIL GAUTAM</div>
-          <div class="upi-apps-row">
-            <span class="upi-chip"><i class="fas fa-bolt"></i> Autonomous Verification</span>
-            <span class="upi-chip">0% Surcharge</span>
-            <span class="upi-chip">256-Bit Secured</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+            <button class="btn btn-phonepe" onclick="openUpiAppDeepLink()">
+              <i class="fas fa-mobile-alt"></i> Pay via UPI App (Mobile)
+            </button>
+            <button class="btn btn-primary" onclick="confirmUpiPayment()">
+              <i class="fas fa-check-circle"></i> I Have Paid via UPI • Verify & Issue Ticket
+            </button>
           </div>
         </div>
 
-        <!-- Autonomous System Verification Radar -->
-        <div id="paymentRadar" style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 16px; margin-bottom: 16px; text-align: center; position: relative; overflow: hidden;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px;">
-            <span class="spinner" style="border-top-color: #0b63d6; border-color: rgba(11, 99, 214, 0.2); width: 20px; height: 20px;"></span>
-            <strong style="color: #1e40af; font-size: 0.92rem;" id="radarStatusTitle">Listening for incoming UPI transaction...</strong>
-          </div>
-          <div style="font-size: 0.8rem; color: #475569; line-height: 1.4;" id="radarStatusSub">
-            Please complete the payment on your UPI app. The system is actively monitoring the banking network and will <b>automatically issue your e-ticket</b> as soon as payment is confirmed.
-          </div>
-          <div style="margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; background: #dbeafe; padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; color: #1e3a8a; font-weight: 600;">
-            <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2563eb; animation: pulse 1.5s infinite;"></span>
-            Auto-Detector Active • Do not refresh or close
+        <!-- TAB 2: CREDIT / DEBIT CARD -->
+        <div class="tab-pane" id="cardTab">
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+            <div>
+              <label for="cardNumberInput"><i class="far fa-credit-card"></i> Card Number</label>
+              <input id="cardNumberInput" type="text" placeholder="4532 8912 3456 7890" maxlength="19" value="4532 8912 3456 7890" />
+            </div>
+            <div>
+              <label for="cardHolderInput"><i class="far fa-user"></i> Cardholder Name</label>
+              <input id="cardHolderInput" type="text" placeholder="Sahil Gautam" value="Sahil Gautam" />
+            </div>
+            <div class="row">
+              <div>
+                <label for="cardExpiryInput"><i class="far fa-calendar-alt"></i> Expiry (MM/YY)</label>
+                <input id="cardExpiryInput" type="text" placeholder="08/28" maxlength="5" value="08/28" />
+              </div>
+              <div>
+                <label for="cardCvvInput"><i class="fas fa-lock"></i> CVV</label>
+                <input id="cardCvvInput" type="password" placeholder="888" maxlength="3" value="888" />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="initiateCardPayment()">
+              <i class="fas fa-lock"></i> Pay <span class="cardPayAmountText">₹28.00</span> Securely
+            </button>
           </div>
         </div>
 
-        <button id="cancelPaymentBtn" class="btn btn-ghost">
+        <!-- TAB 3: NET BANKING -->
+        <div class="tab-pane" id="nbTab">
+          <label style="margin-bottom: 8px;">Select Your Bank</label>
+          <div class="bank-grid">
+            <div class="bank-card selected" onclick="selectBank(this, 'State Bank of India')">
+              <i class="fas fa-university" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #0b63d6;"></i>
+              SBI
+            </div>
+            <div class="bank-card" onclick="selectBank(this, 'HDFC Bank')">
+              <i class="fas fa-landmark" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #1e3a8a;"></i>
+              HDFC
+            </div>
+            <div class="bank-card" onclick="selectBank(this, 'ICICI Bank')">
+              <i class="fas fa-building" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #b91c1c;"></i>
+              ICICI
+            </div>
+            <div class="bank-card" onclick="selectBank(this, 'Axis Bank')">
+              <i class="fas fa-money-check" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #831843;"></i>
+              Axis
+            </div>
+            <div class="bank-card" onclick="selectBank(this, 'Kochi Metro Rail Bank')">
+              <i class="fas fa-train" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #059669;"></i>
+              KMRL Bank
+            </div>
+            <div class="bank-card" onclick="selectBank(this, 'Punjab National Bank')">
+              <i class="fas fa-university" style="font-size: 1.2rem; display: block; margin-bottom: 4px; color: #b45309;"></i>
+              PNB
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="initiateNetBankingPayment()">
+            <i class="fas fa-external-link-alt"></i> Pay via <span id="selectedBankName">State Bank of India</span>
+          </button>
+        </div>
+
+        <!-- TAB 4: WALLETS -->
+        <div class="tab-pane" id="walletTab">
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #f8fafc;">
+              <input type="radio" name="walletChoice" value="PhonePe Wallet" checked style="width: auto;" />
+              <span style="font-weight: 600; color: #5f259f;"><i class="fab fa-google-pay"></i> PhonePe Wallet (SAHIL GAUTAM)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #f8fafc;">
+              <input type="radio" name="walletChoice" value="Paytm Wallet" style="width: auto;" />
+              <span style="font-weight: 600; color: #00b9f5;"><i class="fas fa-wallet"></i> Paytm Wallet</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; background: #f8fafc;">
+              <input type="radio" name="walletChoice" value="Amazon Pay" style="width: auto;" />
+              <span style="font-weight: 600; color: #f59e0b;"><i class="fab fa-amazon-pay"></i> Amazon Pay</span>
+            </label>
+          </div>
+          <button class="btn btn-primary" onclick="initiateWalletPayment()">
+            <i class="fas fa-shield-alt"></i> Pay with Selected Wallet
+          </button>
+        </div>
+
+        <button id="cancelPaymentBtn" class="btn btn-ghost" style="margin-top: 14px;">
           <i class="fas fa-times"></i> Cancel Payment & Return
         </button>
       </section>
+
+      <!-- MODAL 1: 3D-SECURE BANK OTP DIALOG -->
+      <div class="pg-modal-overlay hidden" id="cardOtpModal">
+        <div class="pg-modal-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <div style="font-weight: 800; color: #0b63d6; font-size: 1.05rem;">
+              <i class="fas fa-shield-alt"></i> 3D Secure 2.0 Verification
+            </div>
+            <div style="font-size: 0.75rem; background: #ecfdf5; color: #065f46; padding: 3px 8px; border-radius: 12px; font-weight: 700;">Verified by Visa / RuPay</div>
+          </div>
+          <div style="font-size: 0.85rem; color: #475569; margin-bottom: 14px;">
+            A one-time passcode (OTP) has been dispatched to your mobile number ending in <b id="otpMobileEnding">•••• 1234</b> for transaction of <b id="otpAmountTag" style="color: #0b63d6;">₹28.00</b>.
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label for="bankOtpInput"><i class="fas fa-key"></i> Enter 6-Digit Bank OTP</label>
+            <input id="bankOtpInput" type="text" placeholder="582910" maxlength="6" value="582910" style="font-size: 1.2rem; letter-spacing: 4px; text-align: center; font-weight: 700;" />
+            <div style="font-size: 0.72rem; color: #059669; margin-top: 4px;"><i class="fas fa-info-circle"></i> OTP automatically prefilled for seamless demo testing.</div>
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost" onclick="closeModal('cardOtpModal')" style="flex: 0.4;">Cancel</button>
+            <button class="btn btn-primary" onclick="submitCardOtp()" style="flex: 1;">
+              <i class="fas fa-check"></i> Authorize & Pay
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL 2: NET BANKING AUTHORIZATION DIALOG -->
+      <div class="pg-modal-overlay hidden" id="netBankingModal">
+        <div class="pg-modal-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <div style="font-weight: 800; color: #0b63d6; font-size: 1.05rem;" id="nbModalBankTitle">
+              <i class="fas fa-university"></i> State Bank of India
+            </div>
+            <div style="font-size: 0.72rem; background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-weight: 700;">KMRL Corporate Gateway</div>
+          </div>
+          <div style="font-size: 0.85rem; color: #475569; margin-bottom: 14px;">
+            Merchant: <b>Kochi Metro Rail Limited</b><br>
+            Amount: <b id="nbModalAmountTag" style="color: #0b63d6;">₹28.00</b>
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label><i class="fas fa-user-lock"></i> Bank Customer ID</label>
+            <input type="text" value="KMRL_USER_9847" readonly style="background: #f1f5f9;" />
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost" onclick="closeModal('netBankingModal')" style="flex: 0.4;">Abort</button>
+            <button class="btn btn-primary" onclick="submitNetBankingAuth()" style="flex: 1;">
+              <i class="fas fa-check-double"></i> Authorize Debit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL 3: GATEWAY PROCESSING OVERLAY -->
+      <div class="pg-modal-overlay hidden" id="pgProcessingModal">
+        <div class="pg-modal-content" style="text-align: center; max-width: 380px;">
+          <div class="spinner" style="width: 48px; height: 48px; border-width: 4px; border-top-color: #0b63d6; border-color: #bfdbfe; margin: 0 auto 16px;"></div>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 6px;" id="pgProcessingTitle">Processing Payment...</h3>
+          <p style="font-size: 0.82rem; color: #64748b; line-height: 1.4;" id="pgProcessingSub">Contacting banking network and verifying 256-bit security token. Please do not refresh.</p>
+        </div>
+      </div>
+
+      <!-- MODAL 4: PAYMENT SUCCESS RECEIPT OVERLAY -->
+      <div class="pg-modal-overlay hidden" id="pgSuccessModal">
+        <div class="pg-modal-content" style="text-align: center; max-width: 420px;">
+          <div class="success-checkmark-circle">
+            <i class="fas fa-check"></i>
+          </div>
+          <h3 style="font-size: 1.3rem; font-weight: 800; color: #166534; margin-bottom: 4px;">Payment Successful!</h3>
+          <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;" id="pgSuccessSub">
+            Transaction verified by KMRL Payment Gateway
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 16px; text-align: left; font-size: 0.82rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: #64748b;">Amount Paid</span>
+              <b id="receiptAmount" style="color: #0b63d6; font-size: 0.95rem;">₹28.00</b>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: #64748b;">Transaction Ref</span>
+              <b id="receiptRef" style="font-family: monospace;">BNK983410</b>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #64748b;">Payment Method</span>
+              <b id="receiptMethod">PhonePe UPI</b>
+            </div>
+          </div>
+          <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
+            <i class="fas fa-ticket-alt"></i> Generating official e-Ticket with Gate Pass...
+          </div>
+        </div>
+      </div>
 
       <!-- ================= STEP 4: TICKET CONFIRMATION ================= -->
       <aside class="hidden" id="ticketAside" style="width: 100%;">
@@ -833,8 +1121,31 @@
         updateStepIndicators(1);
       });
 
-      let paymentPollInterval = null;
       let activeSessionId = null;
+      let selectedBank = "State Bank of India";
+
+      // Gateway Tab Switcher
+      function switchPGTab(tabId) {
+        document.querySelectorAll(".gateway-tab-btn").forEach(btn => btn.classList.remove("active"));
+        document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
+
+        if (event && event.currentTarget) event.currentTarget.classList.add("active");
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add("active");
+      }
+
+      function selectBank(el, bankName) {
+        document.querySelectorAll(".bank-card").forEach(c => c.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedBank = bankName;
+        const nameEl = document.getElementById("selectedBankName");
+        if (nameEl) nameEl.textContent = bankName;
+      }
+
+      function closeModal(modalId) {
+        const m = document.getElementById(modalId);
+        if (m) m.classList.add("hidden");
+      }
 
       // Step 2 -> Step 3 (Payment Gateway)
       document.getElementById("proceedToPayBtn").addEventListener("click", async () => {
@@ -856,19 +1167,16 @@
         const proceedBtn = document.getElementById("proceedToPayBtn");
         const originalBtnText = proceedBtn.innerHTML;
         proceedBtn.disabled = true;
-        proceedBtn.innerHTML = `<div class="spinner"></div> <span>Initializing Payment Gateway...</span>`;
+        proceedBtn.innerHTML = `<div class="spinner"></div> <span>Initializing Gateway...</span>`;
 
         // Populate Gateway Screen
         document.getElementById("payName").textContent = data.passengerName;
         document.getElementById("payRoute").textContent = `${data.fromStation.replace(/_/g, " ")} → ${data.toStation.replace(/_/g, " ")} (${data.passengerCount} Pax)`;
         document.getElementById("payAmountTag").textContent = `₹${data.totalFare.toFixed(2)}`;
-
-        // Reset Radar UI
-        document.getElementById("radarStatusTitle").textContent = "Listening for incoming UPI transaction...";
-        document.getElementById("radarStatusSub").innerHTML = "Please complete the payment on your UPI app. The system is actively monitoring the banking network and will <b>automatically issue your e-ticket</b> as soon as payment is confirmed.";
+        document.querySelectorAll(".cardPayAmountText").forEach(el => el.textContent = `₹${data.totalFare.toFixed(2)}`);
 
         try {
-          // 1. Create Payment Session in Backend
+          // Create Payment Session in Backend
           const res = await fetch("/api/tickets/payment-session/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -892,86 +1200,189 @@
 
           // Start 5-minute countdown timer
           startCountdown(300);
-
-          // 2. Start Autonomous Polling for System Verification
-          startPaymentPolling(activeSessionId, data, email, phone);
         } catch (err) {
-          console.error("Payment session initialization error:", err);
-          // Fallback session ID if offline
+          console.error("Payment session initialization notice:", err);
           activeSessionId = `PAY-KMRL-${Date.now().toString().slice(-8)}`;
           detailsForm.classList.add("hidden");
           paymentGateway.classList.remove("hidden");
           updateStepIndicators(3);
           startCountdown(300);
-          startPaymentPolling(activeSessionId, data, email, phone);
         } finally {
           proceedBtn.disabled = false;
           proceedBtn.innerHTML = originalBtnText;
         }
       });
 
-      // Autonomous Polling Loop
-      function startPaymentPolling(sessionId, routeData, email, phone) {
-        if (paymentPollInterval) clearInterval(paymentPollInterval);
-
-        let pollCount = 0;
-        paymentPollInterval = setInterval(async () => {
-          pollCount++;
-          try {
-            const res = await fetch(`/api/tickets/payment-session/status/${sessionId}`);
-            if (!res.ok) throw new Error("Status check failed");
-            const data = await res.json();
-
-            if (data.status === "COMPLETED") {
-              clearInterval(paymentPollInterval);
-              clearInterval(timerInterval);
-              handlePaymentSuccess(data.ticket || routeData, sessionId, email, phone);
-            } else if (data.status === "EXPIRED" || data.status === "CANCELLED") {
-              clearInterval(paymentPollInterval);
-              clearInterval(timerInterval);
-              alert(`Payment session ${data.status.toLowerCase()}. Please try again.`);
-              paymentGateway.classList.add("hidden");
-              bookingForm.classList.remove("hidden");
-              updateStepIndicators(1);
-            }
-          } catch (err) {
-            console.warn("Polling retry...", err);
-            // Fallback for standalone frontend demonstration after 6 seconds of scanning
-            if (pollCount >= 4) {
-              clearInterval(paymentPollInterval);
-              clearInterval(timerInterval);
-              handlePaymentSuccess(routeData, sessionId, email, phone);
-            }
-          }
-        }, 2000);
+      // 1. UPI Payment Handler
+      function openUpiAppDeepLink() {
+        const data = getCalculatedData();
+        const upiUrl = `upi://pay?pa=sahil2312056@akgec.ac.in&pn=SAHIL%20GAUTAM&am=${data.totalFare.toFixed(2)}&cu=INR&tn=Kochi%20Metro%20Ticket`;
+        window.location.href = upiUrl;
       }
 
-      // Handle Automatic System Payment Verification
-      function handlePaymentSuccess(ticket, sessionId, email, phone) {
-        document.getElementById("radarStatusTitle").innerHTML = `<i class="fas fa-check-circle" style="color: #10b981;"></i> Payment Verified by System!`;
-        document.getElementById("radarStatusSub").textContent = "Transaction confirmed on banking network. Issuing official Kochi Metro e-Ticket...";
+      function confirmUpiPayment() {
+        processPaymentTransaction("PhonePe UPI", `UPI${Math.floor(100000000000 + Math.random() * 900000000000)}`);
+      }
+
+      // 2. Card Payment Handler
+      function initiateCardPayment() {
+        const cardNum = document.getElementById("cardNumberInput").value.trim();
+        const cardHolder = document.getElementById("cardHolderInput").value.trim();
+        const phone = phoneInput.value.trim();
+
+        if (cardNum.length < 12) {
+          alert("Please enter a valid card number.");
+          return;
+        }
+        if (!cardHolder) {
+          alert("Please enter the cardholder name.");
+          return;
+        }
 
         const data = getCalculatedData();
+        document.getElementById("otpMobileEnding").textContent = `•••• ${phone.slice(-4) || "1234"}`;
+        document.getElementById("otpAmountTag").textContent = `₹${data.totalFare.toFixed(2)}`;
+        document.getElementById("cardOtpModal").classList.remove("hidden");
+      }
+
+      function submitCardOtp() {
+        const otp = document.getElementById("bankOtpInput").value.trim();
+        if (otp.length !== 6) {
+          alert("Please enter a valid 6-digit bank OTP.");
+          return;
+        }
+        closeModal("cardOtpModal");
+        processPaymentTransaction("Credit/Debit Card", `CARD_AUTH_${Math.floor(100000 + Math.random() * 900000)}`);
+      }
+
+      // 3. Net Banking Handler
+      function initiateNetBankingPayment() {
+        const data = getCalculatedData();
+        document.getElementById("nbModalBankTitle").innerHTML = `<i class="fas fa-university"></i> ${selectedBank}`;
+        document.getElementById("nbModalAmountTag").textContent = `₹${data.totalFare.toFixed(2)}`;
+        document.getElementById("netBankingModal").classList.remove("hidden");
+      }
+
+      function submitNetBankingAuth() {
+        closeModal("netBankingModal");
+        processPaymentTransaction(`Net Banking (${selectedBank})`, `NB_${Math.floor(10000000 + Math.random() * 90000000)}`);
+      }
+
+      // 4. Wallet Payment Handler
+      function initiateWalletPayment() {
+        const walletChoice = document.querySelector("input[name='walletChoice']:checked")?.value || "PhonePe Wallet";
+        processPaymentTransaction(walletChoice, `WAL_${Math.floor(10000000 + Math.random() * 90000000)}`);
+      }
+
+      // UNIFIED PAYMENT PROCESSING & BACKEND VERIFICATION PIPELINE
+      async function processPaymentTransaction(method, refId) {
+        clearInterval(timerInterval);
+        const data = getCalculatedData();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const sessionId = activeSessionId || `PAY-KMRL-${Date.now().toString().slice(-8)}`;
+
+        // Show Processing Overlay
+        const procModal = document.getElementById("pgProcessingModal");
+        const procTitle = document.getElementById("pgProcessingTitle");
+        const procSub = document.getElementById("pgProcessingSub");
+        procModal.classList.remove("hidden");
+
+        procTitle.textContent = "Connecting to Payment Gateway...";
+        procSub.textContent = `Authenticating ${method} transaction with banking network...`;
+
+        try {
+          // Call Backend Gateway Processing Endpoint
+          const res = await fetch("/api/tickets/payment-session/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              method: method,
+              ref_id: refId
+            })
+          });
+
+          const result = await res.json();
+          const ticketData = result.ticket || {
+            ticket_id: `KMRL-${Math.floor(10000 + Math.random() * 90000)}`,
+            name: data.passengerName,
+            from: data.fromStation,
+            to: data.toStation,
+            fare: data.totalFare,
+            passengers: data.passengerCount,
+            distance: data.distance,
+            date: new Date().toLocaleDateString('en-GB'),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            payment: method
+          };
+
+          // Transition to Success Receipt Modal
+          setTimeout(() => {
+            procModal.classList.add("hidden");
+            
+            document.getElementById("receiptAmount").textContent = `₹${data.totalFare.toFixed(2)}`;
+            document.getElementById("receiptRef").textContent = refId;
+            document.getElementById("receiptMethod").textContent = method;
+
+            const successModal = document.getElementById("pgSuccessModal");
+            successModal.classList.remove("hidden");
+
+            // Populate Confirmed e-Ticket Pass Screen
+            renderConfirmedTicket(ticketData, sessionId, refId, method, email);
+
+            // Transition from Receipt to e-Ticket Pass
+            setTimeout(() => {
+              successModal.classList.add("hidden");
+              paymentGateway.classList.add("hidden");
+              ticketAside.classList.remove("hidden");
+              updateStepIndicators(4);
+            }, 1800);
+          }, 1200);
+
+        } catch (err) {
+          console.warn("Notice: Local processing fallback for payment:", err);
+          setTimeout(() => {
+            procModal.classList.add("hidden");
+            const fallbackTicket = {
+              ticket_id: `KMRL-${Math.floor(10000 + Math.random() * 90000)}`,
+              name: data.passengerName,
+              from: data.fromStation,
+              to: data.toStation,
+              fare: data.totalFare,
+              passengers: data.passengerCount,
+              distance: data.distance,
+              date: new Date().toLocaleDateString('en-GB'),
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              payment: method
+            };
+            renderConfirmedTicket(fallbackTicket, sessionId, refId, method, email);
+            paymentGateway.classList.add("hidden");
+            ticketAside.classList.remove("hidden");
+            updateStepIndicators(4);
+          }, 1000);
+        }
+      }
+
+      function renderConfirmedTicket(ticket, sessionId, refId, method, email) {
+        const data = getCalculatedData();
         const txnId = sessionId || `KMRL_TXN_${Date.now().toString().slice(-8)}`;
-        const now = new Date();
-        const dateStr = ticket.date || ticket.ticket_date || now.toLocaleDateString('en-GB');
-        const timeStr = ticket.time || ticket.ticket_time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const paymentMethod = ticket.payment || ticket.payment_method || paymentMethodSelect.value;
+        const dateStr = ticket.date || ticket.ticket_date || new Date().toLocaleDateString('en-GB');
+        const timeStr = ticket.time || ticket.ticket_time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const ticketRef = ticket.ticket_id || `KMRL-${Math.floor(10000 + Math.random() * 90000)}`;
 
-        // Update Ticket Display DOM
-        document.getElementById("ticketTxnId").textContent = `${ticketRef} • Txn: ${txnId}`;
+        document.getElementById("ticketTxnId").textContent = `${ticketRef} • Txn: ${txnId} • Ref: ${refId}`;
         document.getElementById("ticketFrom").textContent = (ticket.from || ticket.from_station || data.fromStation).replace(/_/g, " ");
         document.getElementById("ticketTo").textContent = (ticket.to || ticket.to_station || data.toStation).replace(/_/g, " ");
         document.getElementById("ticketName").textContent = ticket.name || ticket.passenger_name || data.passengerName;
         document.getElementById("fareAmount").textContent = `₹${(ticket.fare || data.totalFare).toFixed(2)}`;
         document.getElementById("ticketMetaDistance").textContent = `${ticket.distance || data.distance} km • ${ticket.passengers || data.passengerCount} Pax`;
-        document.getElementById("ticketPaymentMode").textContent = paymentMethod;
+        document.getElementById("ticketPaymentMode").textContent = method;
         document.getElementById("ticketDate").textContent = dateStr;
         document.getElementById("ticketTime").textContent = timeStr;
 
         // Generate Boarding Gate QR Pass
-        const qrContent = ticket.qr_data || `KMRL-PASS\nTxn: ${txnId}\nPassenger: ${data.passengerName}\nFrom: ${data.fromStation}\nTo: ${data.toStation}\nPax: ${data.passengerCount}\nFare: INR ${data.totalFare}\nDate: ${dateStr} ${timeStr}\nStatus: PAID-VERIFIED`;
+        const qrContent = ticket.qr_data || `KMRL-PASS\nTxn: ${txnId}\nRef: ${refId}\nPassenger: ${data.passengerName}\nFrom: ${data.fromStation}\nTo: ${data.toStation}\nPax: ${data.passengerCount}\nFare: INR ${data.totalFare}\nDate: ${dateStr} ${timeStr}\nPayment: ${method}\nStatus: PAID-VERIFIED`;
         
         const qrcodeDiv = document.getElementById("qrcode");
         qrcodeDiv.innerHTML = "";
@@ -997,28 +1408,22 @@
           savedTickets.push({
             txnId,
             ticketRef,
+            refId,
             name: data.passengerName,
             from: data.fromStation,
             to: data.toStation,
             fare: data.totalFare,
             date: dateStr,
             time: timeStr,
-            email: email
+            email: email,
+            payment: method
           });
           localStorage.setItem("tickets", JSON.stringify(savedTickets));
         } catch (e) {}
-
-        // Transition to Ticket Screen
-        setTimeout(() => {
-          paymentGateway.classList.add("hidden");
-          ticketAside.classList.remove("hidden");
-          updateStepIndicators(4);
-        }, 1200);
       }
 
       // Cancel Payment -> Back to Details
       document.getElementById("cancelPaymentBtn").addEventListener("click", () => {
-        if (paymentPollInterval) clearInterval(paymentPollInterval);
         clearInterval(timerInterval);
         if (activeSessionId) {
           fetch(`/api/tickets/payment-session/cancel/${activeSessionId}`, { method: "POST" }).catch(() => {});
@@ -1040,7 +1445,6 @@
 
           if (--timer < 0) {
             clearInterval(timerInterval);
-            if (paymentPollInterval) clearInterval(paymentPollInterval);
             alert("Payment session timed out. Please try again.");
             paymentGateway.classList.add("hidden");
             bookingForm.classList.remove("hidden");

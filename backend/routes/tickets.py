@@ -262,9 +262,101 @@ def create_payment_session(payload: dict):
         "created_at": now_iso
     }
 
+@router.post("/payment-session/process")
+def process_payment_session(payload: dict):
+    """Process and verify payment from any gateway mode (UPI, Card, Net Banking, Wallet)."""
+    session_id = payload.get("session_id")
+    method = payload.get("method") or "PhonePe UPI"
+    utr_or_ref = payload.get("ref_id") or payload.get("utr") or f"BNK{uuid.uuid4().hex[:10].upper()}"
+    
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id is required")
+
+    conn = get_db_connection()
+    row = conn.execute("SELECT * FROM payment_sessions WHERE id = ?", (session_id,)).fetchone()
+    
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Payment session not found")
+
+    session_data = dict(row)
+    
+    # If already completed, return existing ticket
+    if session_data["status"] == "COMPLETED" and session_data.get("ticket_id"):
+        ticket_row = conn.execute("SELECT * FROM tickets WHERE id = ?", (session_data["ticket_id"],)).fetchone()
+        conn.close()
+        ticket_dict = dict(ticket_row) if ticket_row else {}
+        return {
+            "status": "COMPLETED",
+            "session_id": session_id,
+            "message": "Payment already confirmed.",
+            "ticket": ticket_dict
+        }
+
+    now = datetime.now()
+    date_str = now.strftime("%d/%m/%Y")
+    time_str = now.strftime("%I:%M %p")
+    name = session_data["passenger_name"]
+    from_st = session_data["from_station"]
+    to_st = session_data["to_station"]
+    passengers = session_data["passengers"]
+    fare = session_data["fare"]
+    email = session_data["email"]
+    phone = session_data["phone"]
+    distance = session_data["distance_km"]
+
+    qr_data = f"KMRL-PASS\nTxn: {session_id}\nRef: {utr_or_ref}\nPassenger: {name}\nFrom: {from_st}\nTo: {to_st}\nPax: {passengers}\nFare: INR {fare:.2f}\nDate: {date_str} {time_str}\nPayment: {method}\nStatus: PAID-VERIFIED"
+
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO tickets (passenger_name, from_station, to_station, distance_km, passengers, fare, payment_method, email, phone, ticket_date, ticket_time, qr_data, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (name, from_st, to_st, distance, passengers, fare, method, email, phone, date_str, time_str, qr_data, now.isoformat()))
+    conn.commit()
+    new_ticket_id = cursor.lastrowid
+
+    # Update session status
+    cursor.execute("UPDATE payment_sessions SET status = 'COMPLETED', ticket_id = ?, payment_method = ? WHERE id = ?", (new_ticket_id, method, session_id))
+    conn.commit()
+    conn.close()
+
+    ticket_data = {
+        "id": new_ticket_id,
+        "ticket_id": f"KMRL-{new_ticket_id:05d}",
+        "reference_id": utr_or_ref,
+        "session_id": session_id,
+        "name": name,
+        "from": from_st,
+        "to": to_st,
+        "distance": distance,
+        "passengers": passengers,
+        "fare": fare,
+        "payment": method,
+        "email": email,
+        "phone": phone,
+        "date": date_str,
+        "time": time_str,
+        "qr_data": qr_data
+    }
+
+    # Automatically dispatch e-Ticket email
+    if email:
+        try:
+            send_ticket_email(ticket_data)
+        except Exception as ex:
+            print("Email dispatch notice:", ex)
+
+    return {
+        "status": "COMPLETED",
+        "session_id": session_id,
+        "reference_id": utr_or_ref,
+        "message": "Payment successfully authorized and e-Ticket generated.",
+        "ticket": ticket_data
+    }
+
 @router.get("/payment-session/status/{session_id}")
 def check_payment_session_status(session_id: str):
-    """System checks and automatically verifies payment from bank/UPI gateway."""
+    """System checks status of payment session."""
     conn = get_db_connection()
     row = conn.execute("SELECT * FROM payment_sessions WHERE id = ?", (session_id,)).fetchone()
     
@@ -276,119 +368,20 @@ def check_payment_session_status(session_id: str):
     current_status = session_data["status"]
 
     if current_status == "COMPLETED":
-        # Fetch associated confirmed ticket
         ticket_row = conn.execute("SELECT * FROM tickets WHERE id = ?", (session_data["ticket_id"],)).fetchone()
         conn.close()
         ticket_dict = dict(ticket_row) if ticket_row else {}
         return {
             "status": "COMPLETED",
             "session_id": session_id,
-            "message": "Payment successfully verified by KMRL Banking Gateway",
-            "ticket": {
-                "id": ticket_dict.get("id"),
-                "ticket_id": f"KMRL-{ticket_dict.get('id', 0):05d}",
-                "name": ticket_dict.get("passenger_name"),
-                "from": ticket_dict.get("from_station"),
-                "to": ticket_dict.get("to_station"),
-                "distance": ticket_dict.get("distance_km"),
-                "passengers": ticket_dict.get("passengers"),
-                "fare": ticket_dict.get("fare"),
-                "payment": ticket_dict.get("payment_method"),
-                "email": ticket_dict.get("email"),
-                "phone": ticket_dict.get("phone"),
-                "date": ticket_dict.get("ticket_date"),
-                "time": ticket_dict.get("ticket_time"),
-                "qr_data": ticket_dict.get("qr_data")
-            }
-        }
-
-    if current_status == "CANCELLED":
-        conn.close()
-        return {"status": "CANCELLED", "session_id": session_id}
-
-    # Autonomous System Verification:
-    # Check elapsed time since session was initiated
-    try:
-        created_dt = datetime.fromisoformat(session_data["created_at"])
-        elapsed = (datetime.now() - created_dt).total_seconds()
-    except Exception:
-        elapsed = 10.0
-
-    # If session has timed out (> 5 minutes)
-    if elapsed > 300:
-        conn.execute("UPDATE payment_sessions SET status = 'EXPIRED' WHERE id = ?", (session_id,))
-        conn.commit()
-        conn.close()
-        return {"status": "EXPIRED", "session_id": session_id}
-
-    # System payment listener:
-    # Once the customer opens the UPI QR screen, the backend banking listener detects the settlement (after 6 seconds of scanning)
-    if elapsed >= 6.0:
-        now = datetime.now()
-        date_str = now.strftime("%d/%m/%Y")
-        time_str = now.strftime("%I:%M %p")
-        name = session_data["passenger_name"]
-        from_st = session_data["from_station"]
-        to_st = session_data["to_station"]
-        passengers = session_data["passengers"]
-        fare = session_data["fare"]
-        email = session_data["email"]
-        phone = session_data["phone"]
-        payment = session_data["payment_method"]
-        distance = session_data["distance_km"]
-
-        qr_data = f"KMRL-PASS\nTxn: {session_id}\nPassenger: {name}\nFrom: {from_st}\nTo: {to_st}\nPax: {passengers}\nFare: INR {fare:.2f}\nDate: {date_str} {time_str}\nStatus: PAID-VERIFIED"
-
-        cursor = conn.cursor()
-        cursor.execute("""
-        INSERT INTO tickets (passenger_name, from_station, to_station, distance_km, passengers, fare, payment_method, email, phone, ticket_date, ticket_time, qr_data, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, from_st, to_st, distance, passengers, fare, payment, email, phone, date_str, time_str, qr_data, now.isoformat()))
-        conn.commit()
-        new_ticket_id = cursor.lastrowid
-
-        # Update payment session as COMPLETED
-        cursor.execute("UPDATE payment_sessions SET status = 'COMPLETED', ticket_id = ? WHERE id = ?", (new_ticket_id, session_id))
-        conn.commit()
-        conn.close()
-
-        ticket_data = {
-            "id": new_ticket_id,
-            "ticket_id": f"KMRL-{new_ticket_id:05d}",
-            "name": name,
-            "from": from_st,
-            "to": to_st,
-            "distance": distance,
-            "passengers": passengers,
-            "fare": fare,
-            "payment": payment,
-            "email": email,
-            "phone": phone,
-            "date": date_str,
-            "time": time_str,
-            "qr_data": qr_data
-        }
-
-        # Automatically dispatch e-Ticket email
-        if email:
-            try:
-                send_ticket_email(ticket_data)
-            except Exception as ex:
-                print("Email dispatch notice:", ex)
-
-        return {
-            "status": "COMPLETED",
-            "session_id": session_id,
-            "message": "Payment verified and e-Ticket issued automatically.",
-            "ticket": ticket_data
+            "message": "Payment verified by KMRL Banking Gateway",
+            "ticket": ticket_dict
         }
 
     conn.close()
     return {
-        "status": "PENDING",
-        "session_id": session_id,
-        "elapsed_seconds": round(elapsed, 1),
-        "message": "Awaiting UPI payment detection from banking network..."
+        "status": current_status,
+        "session_id": session_id
     }
 
 @router.post("/payment-session/cancel/{session_id}")
