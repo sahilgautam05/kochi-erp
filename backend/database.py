@@ -158,6 +158,25 @@ def init_db():
     )
     """)
 
+    # 10. Payment Sessions Table (for automated UPI Gateway verification)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS payment_sessions (
+        id TEXT PRIMARY KEY,
+        passenger_name TEXT NOT NULL,
+        from_station TEXT NOT NULL,
+        to_station TEXT NOT NULL,
+        distance_km REAL,
+        passengers INTEGER DEFAULT 1,
+        fare REAL NOT NULL,
+        payment_method TEXT DEFAULT 'PhonePe UPI',
+        email TEXT DEFAULT '',
+        phone TEXT DEFAULT '',
+        status TEXT DEFAULT 'PENDING',
+        ticket_id INTEGER,
+        created_at TEXT
+    )
+    """)
+
     # 10. Users Table for Authentication & Profiles
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
