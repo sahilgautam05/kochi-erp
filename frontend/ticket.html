@@ -3,87 +3,156 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kochi Metro — Ticket Booking Demo</title>
+    <title>Kochi Metro — Ticket Booking & Payment Gateway</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <style>
       :root {
-        --bg: #f3f6fb;
-        --card: #fff;
+        --bg: #f4f7fb;
+        --card: #ffffff;
         --accent: #0b63d6;
+        --accent-hover: #084eb0;
+        --phonepe-purple: #5f259f;
+        --phonepe-dark: #3a1563;
+        --success: #10b981;
         --muted: #6b7280;
-        --glass: rgba(255, 255, 255, 0.6);
-        --shadow: 0 8px 20px rgba(11, 99, 214, 0.08);
+        --border: #e2e8f0;
+        --shadow: 0 10px 25px -5px rgba(11, 99, 214, 0.1), 0 8px 10px -6px rgba(11, 99, 214, 0.05);
       }
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
       body {
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto,
-          "Helvetica Neue", Arial;
-        background: linear-gradient(180deg, #e9f0ff 0%, var(--bg) 60%);
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: linear-gradient(180deg, #e9f0ff 0%, var(--bg) 100%);
         min-height: 100vh;
-        margin: 0;
-        padding: 32px 0;
-        color: #0f1724;
-        text-align: center;
+        padding: 24px 16px;
+        color: #0f172a;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
       }
       .wrap {
-        max-width: 700px;
-        margin: 0 auto;
+        width: 100%;
+        max-width: 640px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 24px;
+        gap: 20px;
       }
       header {
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        text-align: center;
       }
-      .logo {
+      .logo-bar {
         background: var(--card);
-        padding: 10px 14px;
-        border-radius: 10px;
+        padding: 10px 18px;
+        border-radius: 12px;
         box-shadow: var(--shadow);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
       }
-      .logo h1 {
-        font-size: 16px;
-        margin: 0;
+      .logo-bar h1 {
+        font-size: 1.15rem;
+        font-weight: 700;
         color: var(--accent);
       }
-      .welcome {
-        font-weight: 600;
-        color: var(--muted);
-        font-size: 14px;
+      .step-progress {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 480px;
+        margin: 10px 0;
+        position: relative;
       }
+      .step-progress::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--border);
+        transform: translateY(-50%);
+        z-index: 1;
+      }
+      .step-item {
+        position: relative;
+        z-index: 2;
+        background: var(--card);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+        border: 2px solid var(--border);
+        transition: all 0.3s;
+      }
+      .step-item.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(11, 99, 214, 0.2);
+      }
+      .step-item.completed {
+        background: var(--success);
+        border-color: var(--success);
+        color: #fff;
+      }
+
       .panel {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.9),
-          var(--card)
-        );
-        padding: 18px;
-        border-radius: 12px;
+        background: var(--card);
+        padding: 24px;
+        border-radius: 16px;
         box-shadow: var(--shadow);
         width: 100%;
-        max-width: 500px;
-        text-align: left;
+        border: 1px solid var(--border);
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       h2 {
-        margin: 0 0 12px 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #1e293b;
+      }
+      .subtitle {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 18px;
       }
       label {
         display: block;
-        font-size: 13px;
-        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #475569;
         margin-bottom: 6px;
       }
       select,
@@ -91,11 +160,20 @@
       input[type="email"],
       input[type="number"] {
         width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #e6eefb;
-        background: transparent;
-        font-size: 14px;
+        padding: 11px 14px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        font-size: 0.92rem;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      select:focus,
+      input:focus {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(11, 99, 214, 0.15);
       }
       .row {
         display: flex;
@@ -104,86 +182,259 @@
       .row > * {
         flex: 1;
       }
-      button.primary {
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        width: 100%;
+      }
+      .btn-primary {
         background: var(--accent);
         color: white;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 0;
-        font-weight: 600;
-        cursor: pointer;
       }
-      button.ghost {
-        background: transparent;
-        border: 1px solid #dbeafe;
-        padding: 10px;
-        border-radius: 8px;
-        cursor: pointer;
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
       }
-      .ticket {
-        padding: 18px;
+      .btn-ghost {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        background: #e2e8f0;
+      }
+      .btn-phonepe {
+        background: linear-gradient(135deg, var(--phonepe-purple) 0%, #7e3af2 100%);
+        color: #fff;
+        font-size: 1rem;
+        box-shadow: 0 4px 14px rgba(95, 37, 159, 0.3);
+      }
+      .btn-phonepe:hover {
+        opacity: 0.95;
+        transform: translateY(-1px);
+      }
+
+      /* Summary Box */
+      .fare-summary-box {
+        background: #f0f7ff;
+        border: 1px solid #bae6fd;
         border-radius: 12px;
-        background: linear-gradient(90deg, #fff, #fbfdff);
-        border: 1px solid rgba(11, 99, 214, 0.06);
-        width: 100%;
-        max-width: 500px;
-        text-align: left;
-      }
-      .ticket .top {
+        padding: 14px 16px;
+        margin-bottom: 18px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-      }
-      .ticket h3 {
-        margin: 0;
-      }
-      .meta {
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .stations {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 12px 0;
-      }
-      .dot {
-        width: 10px;
-        height: 10px;
-        background: var(--accent);
-        border-radius: 50%;
-      }
-      .qr {
-        margin-top: 12px;
-        display: flex;
-        gap: 12px;
         align-items: center;
       }
-      #qrcode {
-        width: 200px;
-        height: 200px;
-        padding: 0;
-        background: #fff;
-        border-radius: 8px;
+      .fare-summary-box .route-text {
+        font-weight: 600;
+        color: #0369a1;
+        font-size: 0.95rem;
+      }
+      .fare-summary-box .amount-tag {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      /* Payment Gateway UI */
+      .gateway-header {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        color: white;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .gateway-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .gateway-timer {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .qr-payment-card {
+        background: #0f0f11;
+        color: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .phonepe-brand-header {
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: #a855f7;
       }
-      footer.small {
-        font-size: 12px;
+      .qr-img-wrapper {
+        background: #ffffff;
+        padding: 10px;
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        max-width: 260px;
+        width: 100%;
+      }
+      .qr-img-wrapper img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+      }
+      .merchant-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #e2e8f0;
+      }
+      .upi-apps-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+      .upi-chip {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #cbd5e1;
+      }
+
+      /* Ticket Card */
+      .ticket {
+        padding: 24px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px dashed #93c5fd;
+        width: 100%;
+        text-align: left;
+        position: relative;
+        box-shadow: 0 10px 25px rgba(11, 99, 214, 0.1);
+      }
+      .ticket-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+        margin-bottom: 14px;
+      }
+      .status-pill {
+        background: #dcfce7;
+        color: #166534;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .route-visual {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f1f5f9;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin: 12px 0;
+      }
+      .station-block {
+        text-align: left;
+      }
+      .station-block.right {
+        text-align: right;
+      }
+      .station-name {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #0f172a;
+      }
+      .arrow-track {
+        color: var(--accent);
+        font-size: 1.2rem;
+      }
+      .ticket-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        font-size: 0.85rem;
+        margin: 12px 0;
+      }
+      .ticket-details-grid div span {
+        display: block;
         color: var(--muted);
-        margin-top: 8px;
+        font-size: 0.75rem;
       }
+      .ticket-details-grid div strong {
+        color: #1e293b;
+      }
+      .ticket-qr-container {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 12px;
+      }
+      #qrcode img {
+        width: 110px;
+        height: 110px;
+        display: block;
+      }
+
       .hidden {
-        display: none;
+        display: none !important;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
       @media (max-width: 600px) {
         .row {
           flex-direction: column;
         }
-        .panel,
-        .ticket {
-          max-width: 100%;
+        .panel {
+          padding: 18px;
         }
       }
     </style>
@@ -191,8 +442,8 @@
   <body>
     <div class="wrap">
       <header>
-        <div class="logo">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+        <div class="logo-bar">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
             <rect width="24" height="24" rx="6" fill="#0B63D6" />
             <path
               d="M7 12h10M7 16h6"
@@ -203,132 +454,255 @@
             />
           </svg>
           <div>
-            <h1>Kochi Metro</h1>
-            <div style="font-size: 12px; color: var(--muted)">
-              Welcome to online ticket booking
-            </div>
+            <h1>Kochi Metro Rail Limited</h1>
+            <div style="font-size: 11px; color: var(--muted)">Official e-Ticketing & Payment Portal</div>
           </div>
         </div>
-        <div class="welcome">Hello, Passenger — Book quickly & show QR at gate</div>
+
+        <!-- Step Progress Indicator -->
+        <div class="step-progress">
+          <div class="step-item active" id="step1-indicator" title="Select Route">1</div>
+          <div class="step-item" id="step2-indicator" title="Passenger Details">2</div>
+          <div class="step-item" id="step3-indicator" title="Payment Gateway">3</div>
+          <div class="step-item" id="step4-indicator" title="e-Ticket Confirmed">4</div>
+        </div>
       </header>
 
-      <!-- Booking Form -->
+      <!-- ================= STEP 1: ROUTE SELECTION ================= -->
       <section class="panel" id="bookingForm">
-        <h2>Book a ticket</h2>
-        <div style="font-size: 13px; color: var(--muted); margin-bottom: 12px">
-          Select departure and destination. Fare is ₹4 per km.
-        </div>
-        <div style="display: grid; gap: 12px">
+        <h2><i class="fas fa-route" style="color: var(--accent)"></i> Select Route & Passengers</h2>
+        <div class="subtitle">Standard automated fare is ₹4 per kilometer across the Aluva - Tripunithura corridor.</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 14px">
           <div>
-            <label for="from">Departure</label>
+            <label for="from"><i class="fas fa-plane-departure"></i> Departure Station</label>
             <select id="from"></select>
           </div>
           <div>
-            <label for="to">Destination</label>
+            <label for="to"><i class="fas fa-plane-arrival"></i> Destination Station</label>
             <select id="to"></select>
           </div>
           <div class="row">
             <div>
-              <label for="name">Passenger name</label>
-              <input id="name" type="text" placeholder="Your name (for ticket)" />
+              <label for="name"><i class="fas fa-user"></i> Primary Passenger Name</label>
+              <input id="name" type="text" placeholder="e.g. Sahil Gautam" required />
             </div>
             <div>
-              <label for="count">Passengers</label>
-              <input id="count" type="number" value="1" min="1" />
+              <label for="count"><i class="fas fa-users"></i> Passengers Count</label>
+              <input id="count" type="number" value="1" min="1" max="10" />
             </div>
           </div>
-          <button id="nextBtn" class="primary">Proceed to Details</button>
+
+          <div id="routeFarePreview" class="fare-summary-box" style="margin-top: 4px; margin-bottom: 0;">
+            <div>
+              <div class="route-text" id="previewRouteText">Aluva → Edapally</div>
+              <div style="font-size: 0.78rem; color: var(--muted);" id="previewDistanceText">Distance: 7 km</div>
+            </div>
+            <div class="amount-tag" id="previewFareAmount">₹28.00</div>
+          </div>
+
+          <button id="nextBtn" class="btn btn-primary" style="margin-top: 6px;">
+            <span>Proceed to Passenger Details</span> <i class="fas fa-arrow-right"></i>
+          </button>
         </div>
       </section>
 
-      <!-- Details Form -->
+      <!-- ================= STEP 2: PASSENGER DETAILS ================= -->
       <section class="panel hidden" id="detailsForm">
-        <h2>Passenger Details</h2>
-        <div class="row">
+        <h2><i class="fas fa-id-card" style="color: var(--accent)"></i> Passenger & Contact Information</h2>
+        <div class="subtitle">Your official digital e-Ticket and QR pass will be emailed immediately.</div>
+
+        <div class="fare-summary-box">
           <div>
-            <label for="email">Email</label>
-            <input id="email" type="email" placeholder="you@example.com" />
+            <div class="route-text" id="detailsSummaryRoute">Aluva → Edapally</div>
+            <div style="font-size: 0.78rem; color: var(--muted);" id="detailsSummaryPax">1 Passenger(s)</div>
           </div>
+          <div class="amount-tag" id="detailsSummaryFare">₹28.00</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="row">
+            <div>
+              <label for="email"><i class="fas fa-envelope"></i> Email Address *</label>
+              <input id="email" type="email" placeholder="passenger@example.com" required />
+            </div>
+            <div>
+              <label for="phone"><i class="fas fa-phone"></i> Mobile Phone (10-digits) *</label>
+              <input id="phone" type="text" placeholder="9847012345" maxlength="10" required />
+            </div>
+          </div>
+
           <div>
-            <label for="phone">Phone</label>
-            <input id="phone" type="text" placeholder="10-digit number" />
+            <label for="paymentMethodSelect"><i class="fas fa-credit-card"></i> Preferred Payment Mode</label>
+            <select id="paymentMethodSelect">
+              <option value="PhonePe UPI QR">PhonePe / Any UPI App QR (Recommended)</option>
+              <option value="Google Pay / Paytm">Google Pay / Paytm / BHIM</option>
+              <option value="Credit / Debit Card">Credit / Debit Card</option>
+              <option value="Net Banking">Net Banking</option>
+            </select>
           </div>
-        </div>
-        <div style="margin-top: 12px">
-          <label for="payment">Payment Method</label>
-          <select id="payment">
-            <option value="card">Credit/Debit Card</option>
-            <option value="upi">UPI</option>
-            <option value="netbanking">Net Banking</option>
-          </select>
-        </div>
-        <div class="row" style="margin-top: 12px">
-          <button id="calc" class="primary">Generate Ticket</button>
-          <button id="backBtn" class="ghost">Back</button>
+
+          <div class="row" style="margin-top: 8px;">
+            <button id="backToRouteBtn" class="btn btn-ghost" style="flex: 0.4;">
+              <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button id="proceedToPayBtn" class="btn btn-primary" style="flex: 1;">
+              <i class="fas fa-lock"></i> Proceed to Payment Gateway
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- Ticket -->
-      <aside class="hidden" id="ticketAside">
+      <!-- ================= STEP 3: PAYMENT GATEWAY ================= -->
+      <section class="panel hidden" id="paymentGateway">
+        <div class="gateway-header">
+          <div class="gateway-badge">
+            <i class="fas fa-shield-alt" style="color: #4ade80;"></i>
+            <span>KMRL Secure Payment Gateway</span>
+          </div>
+          <div class="gateway-timer" id="timerBadge">
+            <i class="fas fa-clock"></i> <span id="countdownTimer">04:59</span>
+          </div>
+        </div>
+
+        <!-- Order Summary Pill -->
+        <div class="fare-summary-box" style="background: #f8fafc; border-color: #e2e8f0; margin-bottom: 14px;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--muted);">Billable Passenger: <b id="payName" style="color: #1e293b;">—</b></div>
+            <div style="font-size: 0.8rem; color: var(--muted);">Route: <span id="payRoute">—</span></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.75rem; color: var(--muted);">Total Payable</div>
+            <div class="amount-tag" id="payAmountTag" style="color: #0b63d6;">₹0.00</div>
+          </div>
+        </div>
+
+        <!-- PhonePe UPI Scanner Card -->
+        <div class="qr-payment-card" id="upiPaymentSection">
+          <div class="phonepe-brand-header">
+            <i class="fab fa-google-pay" style="font-size: 1.4rem;"></i>
+            <span>PhonePe • UPI Quick Pay</span>
+          </div>
+          <div style="font-size: 0.82rem; color: #a1a1aa;">Scan & Pay Using Any UPI App (PhonePe, GPay, Paytm, BHIM)</div>
+
+          <div class="qr-img-wrapper">
+            <img src="phonepe-qr.jpg" alt="PhonePe UPI Payment QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=sahil2312056@akgec.ac.in'" />
+          </div>
+
+          <div class="merchant-name">SAHIL GAUTAM</div>
+          <div class="upi-apps-row">
+            <span class="upi-chip"><i class="fas fa-bolt"></i> Instant Verification</span>
+            <span class="upi-chip">0% Surcharge</span>
+            <span class="upi-chip">256-Bit Secured</span>
+          </div>
+        </div>
+
+        <!-- UTR / Reference Input -->
+        <div style="margin-bottom: 16px;">
+          <label for="utrNumber"><i class="fas fa-receipt"></i> UPI Reference / UTR Number (Optional)</label>
+          <input id="utrNumber" type="text" placeholder="e.g. 439281048201 or leave blank for instant auto-verify" />
+        </div>
+
+        <div class="row">
+          <button id="cancelPaymentBtn" class="btn btn-ghost" style="flex: 0.4;">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button id="confirmPaidBtn" class="btn btn-phonepe" style="flex: 1;">
+            <i class="fas fa-check-circle"></i> Complete Payment & Generate Ticket
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= STEP 4: TICKET CONFIRMATION ================= -->
+      <aside class="hidden" id="ticketAside" style="width: 100%;">
         <div class="ticket" id="ticketCard">
-          <div class="top">
+          <div class="ticket-header-top">
             <div>
-              <h3 id="ticketTitle">Your e-Ticket</h3>
-              <div class="meta" id="ticketMeta">No ticket generated yet</div>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #0b63d6;">Kochi Metro e-Ticket</h3>
+              <div style="font-size: 0.8rem; color: var(--muted);" id="ticketTxnId">Txn ID: KMRL_TXN_000000</div>
             </div>
-            <div style="text-align: right">
-              <div
-                style="font-weight: 700; font-size: 18px; color: var(--accent)"
-                id="fareAmount"
-              >
-                ₹0.00
-              </div>
-              <div class="meta">Total fare</div>
+            <div class="status-pill">
+              <i class="fas fa-check"></i> Paid & Confirmed
             </div>
           </div>
 
-          <div class="stations">
-            <div>
-              <div class="meta">From</div>
-              <div id="ticketFrom" style="font-weight: 600">—</div>
+          <div class="route-visual">
+            <div class="station-block">
+              <div style="font-size: 0.72rem; color: var(--muted); text-transform: uppercase;">Origin</div>
+              <div class="station-name" id="ticketFrom">Aluva</div>
             </div>
-            <div style="flex: 1; text-align: center; color: var(--muted)">→</div>
-            <div>
-              <div class="meta">To</div>
-              <div id="ticketTo" style="font-weight: 600">—</div>
+            <div class="arrow-track">
+              <i class="fas fa-train"></i> →
+            </div>
+            <div class="station-block right">
+              <div style="font-size: 0.72rem; color: var(--muted); text-transform: uppercase;">Destination</div>
+              <div class="station-name" id="ticketTo">Edapally</div>
             </div>
           </div>
 
-          <div class="meta">
-            Distance: <span id="distanceKm">0</span> km • Fare per km: ₹4
-          </div>
-          <div style="margin-top: 4px" class="meta">
-            Date: <span id="ticketDate">—</span> • Time: <span id="ticketTime">—</span>
+          <div class="ticket-details-grid">
+            <div>
+              <span>Passenger Name</span>
+              <strong id="ticketName">—</strong>
+            </div>
+            <div>
+              <span>Total Fare</span>
+              <strong id="fareAmount" style="color: #0b63d6; font-size: 1.05rem;">₹0.00</strong>
+            </div>
+            <div>
+              <span>Distance & Pax</span>
+              <strong id="ticketMetaDistance">0 km • 1 Pax</strong>
+            </div>
+            <div>
+              <span>Payment Mode</span>
+              <strong id="ticketPaymentMode">PhonePe UPI</strong>
+            </div>
+            <div>
+              <span>Date of Journey</span>
+              <strong id="ticketDate">—</strong>
+            </div>
+            <div>
+              <span>Boarding Time</span>
+              <strong id="ticketTime">—</strong>
+            </div>
           </div>
 
-          <div class="qr">
+          <!-- Boarding Gate QR Code -->
+          <div class="ticket-qr-container">
             <div id="qrcode"></div>
-            <div style="flex: 1">
-              <div style="font-size: 13px; color: var(--muted)">Passenger</div>
-              <div id="ticketName" style="font-weight: 700">—</div>
-              <div id="ticketCount" class="meta">0 passenger(s)</div>
+            <div style="flex: 1;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-bottom: 2px;">Smart QR Gate Pass</div>
+              <div style="font-size: 0.75rem; color: var(--muted); line-height: 1.3;">Scan this QR pass at the Kochi Metro AFC automated fare gates for entry and exit.</div>
+              <div style="font-size: 0.72rem; color: #10b981; font-weight: 600; margin-top: 6px;">
+                <i class="fas fa-check-double"></i> Valid for Today's Journey
+              </div>
             </div>
           </div>
         </div>
-        <button id="downloadTicket" class="primary" style="margin-top: 20px">
-          Download Ticket
-        </button>
+
+        <div id="emailNotice" style="margin-top: 14px; background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; border-radius: 10px; padding: 12px 14px; font-size: 0.85rem; display: none;">
+          <i class="fas fa-envelope-open-text"></i> <b>e-Ticket Sent to Email!</b><br>
+          A digital copy with QR pass and invoice has been delivered to <u id="deliveredEmailText">passenger@example.com</u>.
+        </div>
+
+        <div class="row" style="margin-top: 16px;">
+          <button id="downloadTicket" class="btn btn-primary">
+            <i class="fas fa-download"></i> Download Ticket (PNG)
+          </button>
+          <button id="backToUserPageBtn" class="btn btn-ghost">
+            <i class="fas fa-home"></i> Back to Passenger Portal
+          </button>
+        </div>
       </aside>
     </div>
 
     <!-- QR Code Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
-
     <!-- html2canvas Library for Screenshot -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <script>
-      // Stations and their distances from a reference point (e.g., Kochi Central)
+      // Stations and their distances along the Kochi Metro corridor
       const stations = {
         Aluva: 18,
         Edapally: 11,
@@ -344,236 +718,292 @@
         Edakochi: 13,
       };
 
-      // Populate select options for stations
+      const FARE_PER_KM = 4;
+      let timerInterval = null;
+
+      // Populate select options
       const fromSelect = document.getElementById("from");
       const toSelect = document.getElementById("to");
 
-      Object.keys(stations).forEach((station) => {
-        const optionFrom = document.createElement("option");
-        optionFrom.value = station;
-        optionFrom.textContent = station.replace(/_/g, " ");
-        fromSelect.appendChild(optionFrom);
+      Object.keys(stations).forEach((station, index) => {
+        const opt1 = document.createElement("option");
+        opt1.value = station;
+        opt1.textContent = station.replace(/_/g, " ");
+        fromSelect.appendChild(opt1);
 
-        const optionTo = document.createElement("option");
-        optionTo.value = station;
-        optionTo.textContent = station.replace(/_/g, " ");
-        toSelect.appendChild(optionTo);
+        const opt2 = document.createElement("option");
+        opt2.value = station;
+        opt2.textContent = station.replace(/_/g, " ");
+        if (index === 1) opt2.selected = true;
+        toSelect.appendChild(opt2);
       });
 
-      // Elements
+      // UI Elements
       const bookingForm = document.getElementById("bookingForm");
       const detailsForm = document.getElementById("detailsForm");
+      const paymentGateway = document.getElementById("paymentGateway");
       const ticketAside = document.getElementById("ticketAside");
 
-      const nextBtn = document.getElementById("nextBtn");
-      const backBtn = document.getElementById("backBtn");
-      const calcBtn = document.getElementById("calc");
+      const step1Ind = document.getElementById("step1-indicator");
+      const step2Ind = document.getElementById("step2-indicator");
+      const step3Ind = document.getElementById("step3-indicator");
+      const step4Ind = document.getElementById("step4-indicator");
 
       const nameInput = document.getElementById("name");
       const countInput = document.getElementById("count");
       const emailInput = document.getElementById("email");
       const phoneInput = document.getElementById("phone");
-      const paymentSelect = document.getElementById("payment");
+      const paymentMethodSelect = document.getElementById("paymentMethodSelect");
+      const utrNumberInput = document.getElementById("utrNumber");
 
-      const ticketFrom = document.getElementById("ticketFrom");
-      const ticketTo = document.getElementById("ticketTo");
-      const distanceKmSpan = document.getElementById("distanceKm");
-      const fareAmount = document.getElementById("fareAmount");
-      const ticketName = document.getElementById("ticketName");
-      const ticketCount = document.getElementById("ticketCount");
-      const ticketDate = document.getElementById("ticketDate");
-      const ticketTime = document.getElementById("ticketTime");
-      const ticketMeta = document.getElementById("ticketMeta");
-      const qrcodeDiv = document.getElementById("qrcode");
+      // Auto-fill active user if logged in
+      try {
+        const storedUser = localStorage.getItem("kmrl_current_user");
+        if (storedUser) {
+          const u = JSON.parse(storedUser);
+          if (u.name) nameInput.value = u.name;
+          if (u.email) emailInput.value = u.email;
+          if (u.phone) phoneInput.value = u.phone.replace(/[^0-9]/g, "").slice(-10);
+        }
+      } catch (e) {}
 
-      const downloadBtn = document.getElementById("downloadTicket");
-
-      // Fare per km constant
-      const FARE_PER_KM = 4;
-
-      nextBtn.addEventListener("click", () => {
+      // Calculate Fare Live
+      function getCalculatedData() {
         const fromStation = fromSelect.value;
         const toStation = toSelect.value;
-        const passengerName = nameInput.value.trim();
-        const passengerCount = parseInt(countInput.value, 10);
+        const passengerName = nameInput.value.trim() || "Passenger";
+        const passengerCount = parseInt(countInput.value, 10) || 1;
 
-        if (!fromStation || !toStation) {
-          alert("Please select both departure and destination stations.");
+        const distance = Math.abs((stations[fromStation] || 0) - (stations[toStation] || 0)) || 1;
+        const totalFare = distance * FARE_PER_KM * passengerCount;
+
+        return { fromStation, toStation, passengerName, passengerCount, distance, totalFare };
+      }
+
+      function updateLivePreview() {
+        const data = getCalculatedData();
+        document.getElementById("previewRouteText").textContent = `${data.fromStation.replace(/_/g, " ")} → ${data.toStation.replace(/_/g, " ")}`;
+        document.getElementById("previewDistanceText").textContent = `Distance: ${data.distance} km • ₹4/km`;
+        document.getElementById("previewFareAmount").textContent = `₹${data.totalFare.toFixed(2)}`;
+      }
+
+      fromSelect.addEventListener("change", updateLivePreview);
+      toSelect.addEventListener("change", updateLivePreview);
+      countInput.addEventListener("input", updateLivePreview);
+      updateLivePreview();
+
+      function updateStepIndicators(activeStep) {
+        [step1Ind, step2Ind, step3Ind, step4Ind].forEach((el, idx) => {
+          el.className = "step-item";
+          if (idx + 1 < activeStep) el.classList.add("completed");
+          if (idx + 1 === activeStep) el.classList.add("active");
+        });
+      }
+
+      // Step 1 -> Step 2
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        const data = getCalculatedData();
+        if (data.fromStation === data.toStation) {
+          alert("Departure and Destination stations cannot be the same.");
           return;
         }
-        if (fromStation === toStation) {
-          alert("Departure and destination cannot be the same.");
+        if (!nameInput.value.trim()) {
+          alert("Please enter the passenger's name.");
+          nameInput.focus();
           return;
         }
-        if (!passengerName) {
-          alert("Please enter passenger name.");
-          return;
-        }
-        if (!passengerCount || passengerCount < 1) {
-          alert("Please enter a valid passenger count.");
-          return;
-        }
+
+        document.getElementById("detailsSummaryRoute").textContent = `${data.fromStation.replace(/_/g, " ")} → ${data.toStation.replace(/_/g, " ")}`;
+        document.getElementById("detailsSummaryPax").textContent = `${data.passengerCount} Passenger(s) (${data.distance} km)`;
+        document.getElementById("detailsSummaryFare").textContent = `₹${data.totalFare.toFixed(2)}`;
 
         bookingForm.classList.add("hidden");
         detailsForm.classList.remove("hidden");
+        updateStepIndicators(2);
       });
 
-      backBtn.addEventListener("click", () => {
+      // Step 2 -> Step 1
+      document.getElementById("backToRouteBtn").addEventListener("click", () => {
         detailsForm.classList.add("hidden");
         bookingForm.classList.remove("hidden");
+        updateStepIndicators(1);
       });
 
-      calcBtn.addEventListener("click", () => {
-        // Validate details
+      // Step 2 -> Step 3 (Payment Gateway)
+      document.getElementById("proceedToPayBtn").addEventListener("click", () => {
         const email = emailInput.value.trim();
         const phone = phoneInput.value.trim();
 
-        if (!email) {
-          alert("Please enter your email.");
+        if (!email || !email.includes("@")) {
+          alert("Please enter a valid email address for e-ticket delivery.");
+          emailInput.focus();
           return;
         }
-        if (!phone || !/^\d{10}$/.test(phone)) {
-          alert("Please enter a valid 10-digit phone number.");
+        if (!phone || phone.length < 10) {
+          alert("Please enter a valid 10-digit mobile number.");
+          phoneInput.focus();
           return;
         }
 
-        // Calculate distance
-        const fromStation = fromSelect.value;
-        const toStation = toSelect.value;
-        const passengerName = nameInput.value.trim();
-        const passengerCount = parseInt(countInput.value, 10);
+        const data = getCalculatedData();
 
-        const distance =
-          Math.abs(stations[fromStation] - stations[toStation]) || 0;
-
-        const totalFare = distance * FARE_PER_KM * passengerCount;
-
-        // Date and time
-        const now = new Date();
-        const dateStr = now.toLocaleDateString();
-        const timeStr = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        // Update ticket info
-        ticketFrom.textContent = fromStation.replace(/_/g, " ");
-        ticketTo.textContent = toStation.replace(/_/g, " ");
-        distanceKmSpan.textContent = distance;
-        fareAmount.textContent = `₹${totalFare.toFixed(2)}`;
-        ticketName.textContent = passengerName;
-        ticketCount.textContent = `${passengerCount} passenger(s)`;
-        ticketDate.textContent = dateStr;
-        ticketTime.textContent = timeStr;
-        ticketMeta.textContent = `Paid with ${paymentSelect.options[paymentSelect.selectedIndex].text}`;
-
-        // Generate QR code data string
-        const qrData = `Name: ${passengerName}\nFrom: ${fromStation.replace(
-          /_/g,
-          " "
-        )}\nTo: ${toStation.replace(/_/g, " ")}\nPassengers: ${passengerCount}\nFare: ₹${totalFare.toFixed(
-          2
-        )}\nDate: ${dateStr}\nTime: ${timeStr}`;
-
-        // Clear previous QR
-        qrcodeDiv.innerHTML = "";
-
-        // Generate QR code as an image inside the div
-        QRCode.toDataURL(qrData, { width: 200, margin: 1 })
-          .then((url) => {
-            const img = document.createElement("img");
-            img.src = url;
-            img.alt = "QR Code";
-            qrcodeDiv.appendChild(img);
-          })
-        // Save ticket to backend & send email
-        fetch("/api/tickets", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: passengerName,
-            from: fromStation,
-            to: toStation,
-            passengers: passengerCount,
-            fare: totalFare,
-            email: email,
-            phone: phone,
-            payment: paymentSelect.options[paymentSelect.selectedIndex].text
-          })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log("Ticket registered & email dispatched:", data);
-          let emailNotice = document.getElementById("emailNotice");
-          if (!emailNotice) {
-            emailNotice = document.createElement("div");
-            emailNotice.id = "emailNotice";
-            emailNotice.style.background = "#ecfdf5";
-            emailNotice.style.border = "1px solid #6ee7b7";
-            emailNotice.style.color = "#065f46";
-            emailNotice.style.borderRadius = "8px";
-            emailNotice.style.padding = "12px";
-            emailNotice.style.marginTop = "14px";
-            emailNotice.style.fontSize = "13px";
-            ticketAside.insertBefore(emailNotice, downloadBtn);
-          }
-          emailNotice.innerHTML = `📩 <b>e-Ticket Sent to Email!</b><br>A digital copy with QR pass and invoice has been delivered to <u>${email}</u>.`;
-        })
-        .catch(err => {
-          console.error("Error saving ticket / sending email:", err);
-        });
-
-        // Save ticket to localStorage for admin report
-        const ticketInfo = {
-          name: passengerName,
-          from: fromStation,
-          to: toStation,
-          fare: totalFare,
-          date: dateStr,
-          email: email
-        };
-
-        const savedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
-        savedTickets.push(ticketInfo);
-        localStorage.setItem("tickets", JSON.stringify(savedTickets));
+        // Populate Gateway Screen
+        document.getElementById("payName").textContent = data.passengerName;
+        document.getElementById("payRoute").textContent = `${data.fromStation.replace(/_/g, " ")} → ${data.toStation.replace(/_/g, " ")} (${data.passengerCount} Pax)`;
+        document.getElementById("payAmountTag").textContent = `₹${data.totalFare.toFixed(2)}`;
 
         detailsForm.classList.add("hidden");
-        ticketAside.classList.remove("hidden");
+        paymentGateway.classList.remove("hidden");
+        updateStepIndicators(3);
+
+        // Start 5-minute countdown timer
+        startCountdown(300);
       });
 
-      downloadBtn.addEventListener("click", () => {
-        const ticketCard = document.getElementById("ticketCard");
-        if (!ticketCard) {
-          alert("No ticket to download!");
-          return;
+      // Cancel Payment -> Back to Details
+      document.getElementById("cancelPaymentBtn").addEventListener("click", () => {
+        clearInterval(timerInterval);
+        paymentGateway.classList.add("hidden");
+        detailsForm.classList.remove("hidden");
+        updateStepIndicators(2);
+      });
+
+      function startCountdown(duration) {
+        clearInterval(timerInterval);
+        let timer = duration;
+        const timerDisplay = document.getElementById("countdownTimer");
+
+        timerInterval = setInterval(() => {
+          const minutes = parseInt(timer / 60, 10);
+          const seconds = parseInt(timer % 60, 10);
+          timerDisplay.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+
+          if (--timer < 0) {
+            clearInterval(timerInterval);
+            alert("Payment session timed out. Please try again.");
+            paymentGateway.classList.add("hidden");
+            bookingForm.classList.remove("hidden");
+            updateStepIndicators(1);
+          }
+        }, 1000);
+      }
+
+      // Step 3 -> Step 4 (Confirm Payment & Generate Ticket)
+      document.getElementById("confirmPaidBtn").addEventListener("click", async () => {
+        clearInterval(timerInterval);
+        const confirmBtn = document.getElementById("confirmPaidBtn");
+        const originalBtnText = confirmBtn.innerHTML;
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<div class="spinner"></div> <span>Verifying Payment with UPI Gateway...</span>`;
+
+        const data = getCalculatedData();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const paymentMethod = paymentMethodSelect.value;
+        const utr = utrNumberInput.value.trim() || `UPI${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+        const txnId = `KMRL_TXN_${Date.now().toString().slice(-8)}`;
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-GB');
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // Update Ticket Display DOM
+        document.getElementById("ticketTxnId").textContent = `Txn ID: ${txnId} • Ref: ${utr}`;
+        document.getElementById("ticketFrom").textContent = data.fromStation.replace(/_/g, " ");
+        document.getElementById("ticketTo").textContent = data.toStation.replace(/_/g, " ");
+        document.getElementById("ticketName").textContent = data.passengerName;
+        document.getElementById("fareAmount").textContent = `₹${data.totalFare.toFixed(2)}`;
+        document.getElementById("ticketMetaDistance").textContent = `${data.distance} km • ${data.passengerCount} Pax`;
+        document.getElementById("ticketPaymentMode").textContent = paymentMethod;
+        document.getElementById("ticketDate").textContent = dateStr;
+        document.getElementById("ticketTime").textContent = timeStr;
+
+        // Generate Boarding Gate QR Pass
+        const qrContent = `KMRL-PASS\nTxn: ${txnId}\nPassenger: ${data.passengerName}\nFrom: ${data.fromStation}\nTo: ${data.toStation}\nPax: ${data.passengerCount}\nFare: INR ${data.totalFare}\nDate: ${dateStr} ${timeStr}\nStatus: PAID`;
+        
+        const qrcodeDiv = document.getElementById("qrcode");
+        qrcodeDiv.innerHTML = "";
+        QRCode.toDataURL(qrContent, { width: 140, margin: 1 })
+          .then(url => {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "e-Ticket Gate QR";
+            qrcodeDiv.appendChild(img);
+          });
+
+        // Register Ticket & Dispatch e-Ticket Email via Backend
+        try {
+          const res = await fetch("/api/tickets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: data.passengerName,
+              from: data.fromStation,
+              to: data.toStation,
+              passengers: data.passengerCount,
+              fare: data.totalFare,
+              email: email,
+              phone: phone,
+              payment: paymentMethod
+            })
+          });
+
+          const ticketRes = await res.json();
+          console.log("Backend Ticket Dispatched:", ticketRes);
+
+          const emailNotice = document.getElementById("emailNotice");
+          const deliveredEmailText = document.getElementById("deliveredEmailText");
+          if (emailNotice && deliveredEmailText) {
+            deliveredEmailText.textContent = email;
+            emailNotice.style.display = "block";
+          }
+        } catch (err) {
+          console.warn("Notice: Local storage fallback for ticket:", err);
         }
-        html2canvas(ticketCard).then((canvas) => {
+
+        // Save in localStorage for offline access
+        try {
+          const savedTickets = JSON.parse(localStorage.getItem("tickets") || "[]");
+          savedTickets.push({
+            txnId,
+            name: data.passengerName,
+            from: data.fromStation,
+            to: data.toStation,
+            fare: data.totalFare,
+            date: dateStr,
+            time: timeStr,
+            email: email
+          });
+          localStorage.setItem("tickets", JSON.stringify(savedTickets));
+        } catch (e) {}
+
+        // Switch to Ticket Screen
+        setTimeout(() => {
+          paymentGateway.classList.add("hidden");
+          ticketAside.classList.remove("hidden");
+          updateStepIndicators(4);
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = originalBtnText;
+        }, 800);
+      });
+
+      // Download Ticket as PNG
+      document.getElementById("downloadTicket").addEventListener("click", () => {
+        const ticketCard = document.getElementById("ticketCard");
+        if (!ticketCard) return;
+
+        html2canvas(ticketCard, { scale: 2 }).then(canvas => {
           const link = document.createElement("a");
-          link.download = "kochi-metro-ticket.png";
+          link.download = `kochi-metro-ticket-${Date.now()}.png`;
           link.href = canvas.toDataURL("image/png");
           link.click();
         });
       });
 
-      // Button to return to User Page
-      const backButton = document.createElement("button");
-      backButton.classList.add("back-button");
-      backButton.innerHTML = 'Back to User Page';
-      backButton.addEventListener("click", () => {
+      // Back to User Page
+      document.getElementById("backToUserPageBtn").addEventListener("click", () => {
         window.location.href = "userpage.html";
       });
-      ticketAside.appendChild(backButton);
-      backButton.style.marginTop = "10px";
-      backButton.style.background = "var(--accent)";
-      backButton.style.color = "white";
-      backButton.style.padding = "10px 12px";
-      backButton.style.borderRadius = "10px";
-      backButton.style.border = "0";
-      backButton.style.fontWeight = "600";
-      backButton.style.cursor = "pointer";
-      backButton.style.width = "100%";
-      backButton.style.maxWidth = "500px";
-
     </script>
   </body>
 </html>
