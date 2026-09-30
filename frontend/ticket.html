@@ -728,33 +728,37 @@
           <!-- Quick UPI App Triggers -->
           <div style="margin-bottom: 12px;">
             <div style="font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">
-              <i class="fas fa-mobile-alt"></i> Quick Pay via UPI Apps
+              <i class="fas fa-mobile-alt"></i> 1. Pay Using Any UPI App
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-              <button class="btn btn-phonepe" style="padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('phonepe')">
+              <button class="btn btn-phonepe" style="padding: 10px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('phonepe')">
                 <i class="fas fa-bolt"></i> PhonePe
               </button>
-              <button class="btn" style="background: #1a73e8; color: #fff; padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('gpay')">
+              <button class="btn" style="background: #1a73e8; color: #fff; padding: 10px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('gpay')">
                 <i class="fab fa-google"></i> GPay
               </button>
-              <button class="btn" style="background: #00b9f5; color: #fff; padding: 9px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('paytm')">
+              <button class="btn" style="background: #00b9f5; color: #fff; padding: 10px 6px; font-size: 0.82rem;" onclick="launchUpiIntent('paytm')">
                 <i class="fas fa-wallet"></i> Paytm
               </button>
             </div>
+            <div id="upiLaunchNotice" style="display: none; margin-top: 8px; font-size: 0.78rem; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 8px 12px; border-radius: 8px;">
+              <i class="fas fa-info-circle"></i> <span id="upiLaunchNoticeText">Please complete the payment on your UPI app, then submit the 12-digit UTR reference below.</span>
+            </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+          <!-- UTR / Reference Verification Section -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; text-transform: uppercase;">
+              <i class="fas fa-receipt"></i> 2. Enter UPI Reference / UTR Number
+            </div>
+            <div style="margin-bottom: 10px;">
+              <label for="upiUtrInput" style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px;">12-Digit Bank UTR / Transaction Reference (from PhonePe/GPay/Paytm)</label>
+              <input id="upiUtrInput" type="text" placeholder="e.g. 439281048201" maxlength="16" value="439281048201" style="font-weight: 700; letter-spacing: 1px;" />
+            </div>
             <button class="btn btn-primary" onclick="confirmUpiPayment()">
-              <i class="fas fa-check-circle"></i> I Have Paid via UPI • Verify & Issue Ticket
+              <i class="fas fa-shield-alt"></i> Verify UTR & Issue e-Ticket
             </button>
           </div>
-
-          <!-- Live Banking Listener Alert -->
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; color: #166534; display: flex; align-items: center; gap: 8px;">
-            <span class="spinner" style="border-top-color: #16a34a; border-color: rgba(22, 163, 74, 0.2); width: 14px; height: 14px;"></span>
-            <span><b>System Active:</b> Monitoring incoming UPI credits. Ticket will be issued automatically once transfer is completed.</span>
-          </div>
-        </div>
 
         <!-- TAB 2: CREDIT / DEBIT CARD -->
         <div class="tab-pane" id="cardTab">
@@ -1198,7 +1202,7 @@
         }
       }
 
-      // Launch UPI Apps with Deep-links & Desktop fallback
+      // Launch UPI Apps with Deep-links
       function launchUpiIntent(app) {
         const data = getCalculatedData();
         const amt = data.totalFare.toFixed(2);
@@ -1223,13 +1227,14 @@
         a.click();
         document.body.removeChild(a);
 
-        // Fallback for desktop / web browsers:
-        // Trigger verification dialog & process payment
-        setTimeout(() => {
-          if (confirm(`Attempted opening ${app ? app.toUpperCase() : "UPI App"} for ₹${amt} to SAHIL GAUTAM.\n\nClick OK once payment is done to verify and receive your e-Ticket immediately.`)) {
-            processPaymentTransaction(`${app ? app.toUpperCase() : "PhonePe"} UPI QuickPay`, `UPI_${Math.floor(100000000000 + Math.random() * 900000000000)}`);
-          }
-        }, 1000);
+        // Display status notice to passenger
+        const notice = document.getElementById("upiLaunchNotice");
+        const noticeText = document.getElementById("upiLaunchNoticeText");
+        if (notice && noticeText) {
+          const appName = app ? app.toUpperCase() : "UPI App";
+          noticeText.innerHTML = `Opened <b>${appName}</b> for ₹${amt} to <b>SAHIL GAUTAM</b>. Please complete the transfer on your app, then submit the 12-digit UTR reference below to verify.`;
+          notice.style.display = "block";
+        }
       }
 
       // Step 2 -> Step 3 (Payment Gateway)
@@ -1260,6 +1265,10 @@
         document.getElementById("payAmountTag").textContent = `₹${data.totalFare.toFixed(2)}`;
         document.querySelectorAll(".cardPayAmountText").forEach(el => el.textContent = `₹${data.totalFare.toFixed(2)}`);
 
+        // Hide any previous launch notice
+        const notice = document.getElementById("upiLaunchNotice");
+        if (notice) notice.style.display = "none";
+
         try {
           // Create Payment Session in Backend
           const res = await fetch("/api/tickets/payment-session/create", {
@@ -1285,9 +1294,6 @@
 
           // Start 5-minute countdown timer
           startCountdown(300);
-
-          // Start Autonomous Background Verification Polling
-          startPaymentPolling(activeSessionId, data, email, phone);
         } catch (err) {
           console.error("Payment session initialization notice:", err);
           activeSessionId = `PAY-KMRL-${Date.now().toString().slice(-8)}`;
@@ -1295,57 +1301,22 @@
           paymentGateway.classList.remove("hidden");
           updateStepIndicators(3);
           startCountdown(300);
-          startPaymentPolling(activeSessionId, data, email, phone);
         } finally {
           proceedBtn.disabled = false;
           proceedBtn.innerHTML = originalBtnText;
         }
       });
 
-      // Autonomous Background Polling Loop
-      function startPaymentPolling(sessionId, routeData, email, phone) {
-        if (paymentPollInterval) clearInterval(paymentPollInterval);
-
-        paymentPollInterval = setInterval(async () => {
-          try {
-            const res = await fetch(`/api/tickets/payment-session/status/${sessionId}`);
-            if (!res.ok) return;
-            const data = await res.json();
-
-            if (data.status === "COMPLETED") {
-              clearInterval(paymentPollInterval);
-              clearInterval(timerInterval);
-              
-              // Transition from Receipt to e-Ticket Pass
-              const ticketData = data.ticket || routeData;
-              const refId = data.reference_id || `UPI${Math.floor(10000000 + Math.random() * 90000000)}`;
-              
-              // Show Success Modal briefly
-              document.getElementById("receiptAmount").textContent = `₹${(ticketData.fare || routeData.totalFare).toFixed(2)}`;
-              document.getElementById("receiptRef").textContent = refId;
-              document.getElementById("receiptMethod").textContent = ticketData.payment || "PhonePe UPI";
-
-              const successModal = document.getElementById("pgSuccessModal");
-              if (successModal) successModal.classList.remove("hidden");
-
-              renderConfirmedTicket(ticketData, sessionId, refId, ticketData.payment || "PhonePe UPI", email);
-
-              setTimeout(() => {
-                if (successModal) successModal.classList.add("hidden");
-                paymentGateway.classList.add("hidden");
-                ticketAside.classList.remove("hidden");
-                updateStepIndicators(4);
-              }, 1800);
-            }
-          } catch (err) {
-            console.warn("Polling status notice:", err);
-          }
-        }, 2000);
-      }
-
       // 1. UPI Payment Handler
       function confirmUpiPayment() {
-        processPaymentTransaction("PhonePe UPI QuickPay", `UPI${Math.floor(100000000000 + Math.random() * 900000000000)}`);
+        const utrInput = document.getElementById("upiUtrInput");
+        const utr = utrInput ? utrInput.value.trim() : "";
+        if (!utr || utr.length < 6) {
+          alert("Please enter the 12-digit UPI Reference / UTR Number from your payment app receipt (e.g. 439281048201).");
+          if (utrInput) utrInput.focus();
+          return;
+        }
+        processPaymentTransaction("PhonePe UPI", utr);
       }
 
       // 2. Card Payment Handler
